@@ -1,0 +1,10 @@
+Source: rdbox
+Section: devel
+Priority: optional
+Maintainer: INTEC ATI <info-ati@intec.co.jp>
+Build-Depends: cdbs, debhelper
+Standards-Version: 3.9.6
+
+Package: rdbox
+Architecture: armhf
+Description: Make Robot Engineers' Work a Lot Easier.

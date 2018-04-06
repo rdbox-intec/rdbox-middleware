@@ -1,0 +1,14 @@
+[Unit]
+Description=RDBOX BOOTUP SERVICE
+ConditionFileIsExecutable=/etc/rdbox/boot/rdbox-boot.bash
+After=network.target
+
+[Service]
+Type=forking
+ExecStart=/bin/bash /etc/rdbox/boot/rdbox-boot.bash
+TimeoutSec=0
+RemainAfterExit=yes
+SysVStartPriority=99
+
+[Install]
+WantedBy=multi-user.target

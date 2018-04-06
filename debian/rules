@@ -1,0 +1,34 @@
+#!/usr/bin/make -f
+
+include /usr/share/cdbs/1/rules/debhelper.mk 
+
+DEB_DH_BUILDDEB_ARGS = -- -Zgzip
+
+install/rdbox::
+	install -pd $(DEB_DESTDIR)etc/rdbox/templates/interface
+	install -pm 644 templates/networks/interface/master $(DEB_DESTDIR)etc/rdbox/templates/interface
+	install -pm 644 templates/networks/interface/slave $(DEB_DESTDIR)etc/rdbox/templates/interface
+	install -pm 644 templates/networks/hostapd/hostapd_ap_an.conf $(DEB_DESTDIR)etc/rdbox
+	install -pm 644 templates/networks/hostapd/hostapd_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
+	install -pm 644 templates/networks/hostapd/hostapd_be.conf $(DEB_DESTDIR)etc/rdbox
+	install -pm 644 templates/networks/wpa_supplicant.conf $(DEB_DESTDIR)etc/rdbox
+	
+	install -pd $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/rdbox-bind_unbind_dongles.py $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/rdbox-boot.bash $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/rdbox-boot_sub.bash $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/rdbox-first_session.bash $(DEB_DESTDIR)opt/rdbox/boot
+
+	install -pd $(DEB_DESTDIR)opt/rdbox/bin
+	install -pd $(DEB_DESTDIR)usr/bin
+	cp -rf bin/* $(DEB_DESTDIR)opt/rdbox/bin
+	ln -s /opt/rdbox/bin/rdbox $(DEB_DESTDIR)usr/bin
+	
+	install -pd $(DEB_DESTDIR)etc/udev/rules.d
+	install -pm 644 templates/networks/70-persistent-net.rules $(DEB_DESTDIR)etc/udev/rules.d
+	
+	install -pd $(DEB_DESTDIR)etc/cloud/templates
+	install -pm 644 templates/networks/hosts.debian.tmpl $(DEB_DESTDIR)etc/cloud/templates
+	
+	install -pd $(DEB_DESTDIR)lib/systemd/system
+	install -pm 644 templates/services/rdbox-boot.service $(DEB_DESTDIR)lib/systemd/system
