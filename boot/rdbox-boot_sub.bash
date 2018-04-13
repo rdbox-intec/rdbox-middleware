@@ -80,7 +80,7 @@ connect_wifi_with_timeout () {
       echo "Timeout."
       break
     fi
-  done < <(bash -c "stdbuf -oL /sbin/wpa_supplicant -P /run/wpa_supplicant.wlan1.pid -i wlan1 -D nl80211 -c /etc/rdbox/wpa_supplicant.conf 2>&1 &")
+  done < <(bash -c "stdbuf -oL /sbin/wpa_supplicant -P /run/wpa_supplicant.wlan1.pid -i wlan1 -D nl80211 -c /etc/rdbox/wpa_supplicant_be.conf 2>&1 &")
   if ! $is_connected; then
     echo 'WPA authentication failed.'
     pkill -INT -f wpa_supplicant

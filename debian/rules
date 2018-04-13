@@ -8,10 +8,12 @@ install/rdbox::
 	install -pd $(DEB_DESTDIR)etc/rdbox/templates/interface
 	install -pm 644 templates/networks/interface/master $(DEB_DESTDIR)etc/rdbox/templates/interface
 	install -pm 644 templates/networks/interface/slave $(DEB_DESTDIR)etc/rdbox/templates/interface
+	install -pm 644 templates/networks/interface/wlan0 $(DEB_DESTDIR)etc/rdbox/templates/interface
 	install -pm 644 templates/networks/hostapd/hostapd_ap_an.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_be.conf $(DEB_DESTDIR)etc/rdbox
-	install -pm 644 templates/networks/wpa_supplicant.conf $(DEB_DESTDIR)etc/rdbox
+	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_be.conf $(DEB_DESTDIR)etc/rdbox
+	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
 	
 	install -pd $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/rdbox-bind_unbind_dongles.py $(DEB_DESTDIR)opt/rdbox/boot
@@ -26,9 +28,6 @@ install/rdbox::
 	
 	install -pd $(DEB_DESTDIR)etc/udev/rules.d
 	install -pm 644 templates/networks/70-persistent-net.rules $(DEB_DESTDIR)etc/udev/rules.d
-	
-	install -pd $(DEB_DESTDIR)etc/cloud/templates
-	install -pm 644 templates/networks/hosts.debian.tmpl $(DEB_DESTDIR)etc/cloud/templates
 	
 	install -pd $(DEB_DESTDIR)lib/systemd/system
 	install -pm 644 templates/services/rdbox-boot.service $(DEB_DESTDIR)lib/systemd/system
