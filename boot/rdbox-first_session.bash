@@ -4,7 +4,7 @@ regex_master='^.*master.*'
 regex_slave='^.*slave.*'
 hname=`/bin/hostname`
 
-/usr/bin/lsusb -t | /bin/grep -B 1 rt2800usb | /bin/grep -o "Port [0-9]*" | /bin/grep -o "[0-9]*" | /usr/bin/python /etc/rdbox/boot/rdbox-bind_unbind_dongles.py
+/usr/bin/lsusb -t | /bin/grep -B 1 rt2800usb | /bin/grep -o "Port [0-9]*" | /bin/grep -o "[0-9]*" | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
 
 if [[ $hname =~ $regex_master ]]; then
   mv /etc/network/interfaces /etc/network/interfaces.org
