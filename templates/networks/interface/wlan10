@@ -1,4 +1,4 @@
-allow-hotplug wlan0
-iface wlan0 inet dhcp
+allow-hotplug wlan10
+iface wlan10 inet dhcp
 wpa-conf /etc/rdbox/wpa_supplicant_ap_bg.conf
 iface default inet dhcp

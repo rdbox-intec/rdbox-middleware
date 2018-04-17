@@ -8,18 +8,20 @@ hname=`/bin/hostname`
 
 if [[ $hname =~ $regex_master ]]; then
   mv /etc/network/interfaces /etc/network/interfaces.org
-  cp -rf /etc/rdbox/networks/interface/master /etc/network/interfaces
+  cp -rf /etc/rdbox/templates/interface/master /etc/network/interfaces
   /etc/init.d/networking restart
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
+  /bin/systemctl enable dnsmasq.service
+  /bin/systemctl restart dnsmasq.service
 elif [[ $hname =~ $regex_slave ]]; then
   mv /etc/network/interfaces /etc/network/interfaces.org
-  cp -rf /etc/rdbox/networks/interface/slave /etc/network/interfaces
+  cp -rf /etc/rdbox/templates/interface/slave /etc/network/interfaces
   /etc/init.d/networking restart
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
 else
-  cp -rf /etc/rdbox/networks/interface/wlan0 /etc/network/interfaces.d/wlan0
+  cp -rf /etc/rdbox/networks/interface/wlan10 /etc/network/interfaces.d/wlan10
   /etc/init.d/networking restart
 fi
 

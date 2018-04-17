@@ -57,9 +57,9 @@ check_device () {
     echo "Device named 'wlan3' not found."
     return 8
   fi
-  iwconfig wlan4 > /dev/null 2>&1
+  iwconfig wlan10 > /dev/null 2>&1
   if [ $? -ne 0 ]; then
-    echo "Device named 'wlan4' not found."
+    echo "Device named 'wlan10' not found."
     return 8
   fi
   return 0
@@ -80,7 +80,7 @@ connect_wifi_with_timeout () {
       echo "Timeout."
       break
     fi
-  done < <(bash -c "stdbuf -oL /sbin/wpa_supplicant -P /run/wpa_supplicant.wlan1.pid -i wlan1 -D nl80211 -c /etc/rdbox/wpa_supplicant_be.conf 2>&1 &")
+  done < <(bash -c "stdbuf -oL /sbin/wpa_supplicant -P /run/wpa_supplicant.wlan0.pid -i wlan0 -D nl80211 -c /etc/rdbox/wpa_supplicant_be.conf 2>&1 &")
   if ! $is_connected; then
     echo 'WPA authentication failed.'
     pkill -INT -f wpa_supplicant
@@ -96,7 +96,7 @@ startup_hostapd_with_timeout () {
   current_time=$(date +%s)
   while read -t ${HOSTAPD_TIMEOUT} line; do
     echo "  $line"
-    echo $line | grep -wq 'wlan2: AP-ENABLED'
+    echo $line | grep -wq 'wlan1: AP-ENABLED'
     if [ $? -eq 0 ]; then
       is_connected=true
       break

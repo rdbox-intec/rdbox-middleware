@@ -8,7 +8,7 @@ install/rdbox::
 	install -pd $(DEB_DESTDIR)etc/rdbox/templates/interface
 	install -pm 644 templates/networks/interface/master $(DEB_DESTDIR)etc/rdbox/templates/interface
 	install -pm 644 templates/networks/interface/slave $(DEB_DESTDIR)etc/rdbox/templates/interface
-	install -pm 644 templates/networks/interface/wlan0 $(DEB_DESTDIR)etc/rdbox/templates/interface
+	install -pm 644 templates/networks/interface/wlan10 $(DEB_DESTDIR)etc/rdbox/templates/interface
 	install -pm 644 templates/networks/hostapd/hostapd_ap_an.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_be.conf $(DEB_DESTDIR)etc/rdbox

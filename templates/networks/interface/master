@@ -4,7 +4,13 @@ iface lo inet loopback
 auto bat0
 iface bat0 inet dhcp
 
+auto wlan10
+
 auto wlan0
+allow-hotplug wlan0
+iface wlan0 inet manual
+  pre-up /sbin/ifconfig wlan0 mtu 1532
+  pre-up /usr/sbin/batctl if add wlan0
 
 auto wlan1
 allow-hotplug wlan1
@@ -15,16 +21,10 @@ iface wlan1 inet manual
 auto wlan2
 allow-hotplug wlan2
 iface wlan2 inet manual
-  pre-up /sbin/ifconfig wlan2 mtu 1532
-  pre-up /usr/sbin/batctl if add wlan2
 
 auto wlan3
 allow-hotplug wlan3
 iface wlan3 inet manual
-
-auto wlan4
-allow-hotplug wlan4
-iface wlan4 inet manual
 
 auto eth0
 iface eth0 inet dhcp
