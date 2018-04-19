@@ -22,6 +22,7 @@ elif [[ $hname =~ $regex_slave ]]; then
   /bin/systemctl restart rdbox-boot.service
 else
   cp -rf /etc/rdbox/networks/interface/wlan10 /etc/network/interfaces.d/wlan10
+  ln -s /etc/rdbox/wpa_supplicant_be.conf /etc/wpa_supplicant/wpa_supplicant.conf
   /etc/init.d/networking restart
 fi
 

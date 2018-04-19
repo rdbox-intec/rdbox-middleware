@@ -24,6 +24,7 @@ install/rdbox::
 	install -pd $(DEB_DESTDIR)opt/rdbox/bin
 	install -pd $(DEB_DESTDIR)usr/bin
 	cp -rf bin/* $(DEB_DESTDIR)opt/rdbox/bin
+	chmod +x /opt/rdbox/bin/rdbox
 	ln -s /opt/rdbox/bin/rdbox $(DEB_DESTDIR)usr/bin
 	
 	install -pd $(DEB_DESTDIR)etc/udev/rules.d

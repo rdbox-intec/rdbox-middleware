@@ -160,6 +160,9 @@ for_slave () {
     fi
     COUNT=`expr $COUNT + 1`
   done
+  # Success Connection
+  sleep 10
+  /sbin/dhclient br0
   return 0
 }
 
