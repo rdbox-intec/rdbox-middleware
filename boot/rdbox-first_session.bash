@@ -20,10 +20,15 @@ elif [[ $hname =~ $regex_slave ]]; then
   /etc/init.d/networking restart
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
+  /bin/systemctl disable systemd-networkd-wait-online.service
+  /bin/systemctl mask systemd-networkd-wait-online.service
+  sed -i '/^#timeout 60;$/c timeout 15;' /etc/dhcp/dhclient.conf
 else
   cp -rf /etc/rdbox/templates/interface/wlan10 /etc/network/interfaces.d/wlan10
   ln -s /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
   /etc/init.d/networking restart
+  /sbin/ifup wlan10 &
+  /sbin/ifup eth0 &
 fi
 
 exit 0
