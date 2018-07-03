@@ -42,3 +42,8 @@ iface br0 inet static
   pre-up iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
   up iptables -A FORWARD -i eth0 -o br0 -m state --state RELATED,ESTABLISHED -j ACCEPT
   up iptables -A FORWARD -i br0 -o eth0 -j ACCEPT
+
+auto eth1
+allow-hotplug eth1
+iface eth1 inet manual
+  pre-up /sbin/brctl addif br0 eth1

@@ -1,5 +1,12 @@
+auto lo
+iface lo inet loopback
+
+auto eth0
+allow-hotplug eth0
+iface eth0 inet manual
+
+auto wlan10
 allow-hotplug wlan10
 iface wlan10 inet dhcp
 wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
 wireless-power off
-iface default inet dhcp
