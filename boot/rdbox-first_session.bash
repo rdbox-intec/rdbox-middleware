@@ -30,7 +30,9 @@ elif [[ $hname =~ $regex_slave ]]; then
 elif [[ $hname =~ $regex_vpnbridge ]]; then
   mv /etc/network/interfaces /etc/network/interfaces.org
   cp -rf /etc/rdbox/templates/interface/vpnbridge /etc/network/interfaces
+  ln -s /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
   /etc/init.d/networking restart
+  /sbin/ifup wlan10
   /bin/systemctl enable vpnbridge.service
   /bin/systemctl restart vpnbridge.service
   /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
