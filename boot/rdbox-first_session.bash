@@ -32,13 +32,11 @@ elif [[ $hname =~ $regex_vpnbridge ]]; then
   cp -rf /etc/rdbox/templates/interface/vpnbridge /etc/network/interfaces
   ln -s /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
   /etc/init.d/networking restart
-  /sbin/ifup eth0
-  /sbin/ip addr del `ip -f inet -o addr show eth0|cut -d\  -f 7 | cut -d/ -f 1`/24 dev eth0
-  /sbin/ifdown wlan10
   /sbin/ifup wlan10
-  /sbin/dhclient wlan10
+  /sbin/ip addr del `ip -f inet -o addr show eth0|cut -d\  -f 7 | cut -d/ -f 1`/24 dev eth0
   /bin/systemctl enable softether-vpnbridge.service
   /bin/systemctl restart softether-vpnbridge.service
+  sleep 30
   /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
   /bin/systemctl restart softether-vpnbridge.service
 else
