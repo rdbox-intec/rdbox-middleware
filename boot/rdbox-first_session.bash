@@ -17,8 +17,14 @@ if [[ $hname =~ $regex_master ]]; then
   /bin/systemctl restart rdbox-boot.service
   /bin/systemctl enable dnsmasq.service
   /bin/systemctl restart dnsmasq.service
+  mkdir -p /usr/local/share/rdbox
+  echo "/usr/local/share/rdbox 192.168.179.0/24(rw,sync,no_subtree_check,no_root_squash,no_all_squash)" >> /etc/exports
+  /bin/systemctl enable nfs-kernel-server.service
+  /bin/systemctl start nfs-kernel-server.service
 elif [[ $hname =~ $regex_slave ]]; then
   /usr/bin/lsusb -t | /bin/grep -B 1 rt2800usb | /bin/grep -o "Port [0-9]*" | /bin/grep -o "[0-9]*" | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
+  echo "127.0.1.1 $hname" >> /etc/hosts
+  echo "127.0.1.1 $hname" >> /etc/cloud/templates/hosts.debian.tmpl
   mv /etc/network/interfaces /etc/network/interfaces.org
   cp -rf /etc/rdbox/templates/interface/slave /etc/network/interfaces
   /etc/init.d/networking restart
