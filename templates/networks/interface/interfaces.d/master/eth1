@@ -1,0 +1,4 @@
+auto eth1
+allow-hotplug eth1
+iface eth1 inet manual
+  pre-up /sbin/brctl addif br0 eth1

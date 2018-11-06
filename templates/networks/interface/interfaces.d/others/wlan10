@@ -1,5 +1,6 @@
+auto wlan10
 allow-hotplug wlan10
 iface wlan10 inet dhcp
 wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf
 wireless-power off
-iface default inet dhcp
+

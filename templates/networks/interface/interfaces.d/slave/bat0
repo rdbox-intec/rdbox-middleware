@@ -1,0 +1,2 @@
+auto bat0
+iface bat0 inet dhcp

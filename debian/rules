@@ -5,16 +5,43 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 DEB_DH_BUILDDEB_ARGS = -- -Zgzip
 
 install/rdbox::
-	install -pd $(DEB_DESTDIR)etc/rdbox/templates/interface
-	install -pm 644 templates/networks/interface/master $(DEB_DESTDIR)etc/rdbox/templates/interface
-	install -pm 644 templates/networks/interface/slave $(DEB_DESTDIR)etc/rdbox/templates/interface
-	install -pm 644 templates/networks/interface/vpnbridge $(DEB_DESTDIR)etc/rdbox/templates/interface
-	install -pm 644 templates/networks/interface/wlan10 $(DEB_DESTDIR)etc/rdbox/templates/interface
+	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/current
+	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master
+	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave
+	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/vpnbridge
+	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others
 	install -pm 644 templates/networks/hostapd/hostapd_ap_an.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_be.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_be.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
+	install -pm 644 templates/networks/iptables/iptables $(DEB_DESTDIR)etc/rdbox/network
+	install -pm 644 templates/networks/interface/interfaces $(DEB_DESTDIR)etc/rdbox/network
+	install -pm 644 templates/networks/interface/interfaces.d/master/bat0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/bat0
+	install -pm 644 templates/networks/interface/interfaces.d/master/br0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/br0
+	install -pm 644 templates/networks/interface/interfaces.d/master/eth0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/eth0
+	install -pm 644 templates/networks/interface/interfaces.d/master/eth1 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/eth1
+	install -pm 644 templates/networks/interface/interfaces.d/master/lo $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/lo
+	install -pm 644 templates/networks/interface/interfaces.d/master/wlan0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/wlan0
+	install -pm 644 templates/networks/interface/interfaces.d/master/wlan1 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/wlan1
+	install -pm 644 templates/networks/interface/interfaces.d/master/wlan10 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/wlan10
+	install -pm 644 templates/networks/interface/interfaces.d/master/wlan2 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/wlan2
+	install -pm 644 templates/networks/interface/interfaces.d/master/wlan3 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/wlan3
+	install -pm 644 templates/networks/interface/interfaces.d/slave/bat0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave/bat0
+	install -pm 644 templates/networks/interface/interfaces.d/slave/br0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave/br0
+	install -pm 644 templates/networks/interface/interfaces.d/slave/eth0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave/eth0
+	install -pm 644 templates/networks/interface/interfaces.d/slave/lo $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave/lo
+	install -pm 644 templates/networks/interface/interfaces.d/slave/wlan0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave/wlan0
+	install -pm 644 templates/networks/interface/interfaces.d/slave/wlan1 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave/wlan1
+	install -pm 644 templates/networks/interface/interfaces.d/slave/wlan10 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave/wlan10
+	install -pm 644 templates/networks/interface/interfaces.d/slave/wlan2 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave/wlan2
+	install -pm 644 templates/networks/interface/interfaces.d/slave/wlan3 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave/wlan3
+	install -pm 644 templates/networks/interface/interfaces.d/vpnbridge/eth0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/vpnbridge/eth0
+	install -pm 644 templates/networks/interface/interfaces.d/vpnbridge/lo $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/vpnbridge/lo
+	install -pm 644 templates/networks/interface/interfaces.d/vpnbridge/wlan10 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/vpnbridge/wlan10
+	install -pm 644 templates/networks/interface/interfaces.d/others/eth0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others/eth0
+	install -pm 644 templates/networks/interface/interfaces.d/others/lo $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others/lo
+	install -pm 644 templates/networks/interface/interfaces.d/others/wlan10 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others/wlan10
 	
 	install -pd $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/rdbox-bind_unbind_dongles.py $(DEB_DESTDIR)opt/rdbox/boot

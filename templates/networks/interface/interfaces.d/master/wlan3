@@ -1,0 +1,3 @@
+auto wlan3
+allow-hotplug wlan3
+iface wlan3 inet manual
