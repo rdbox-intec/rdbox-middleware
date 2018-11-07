@@ -26,7 +26,7 @@ if [[ $hname =~ $regex_master ]]; then
   /etc/init.d/ssh restart
   http_proxy_size=`wc -c /etc/transproxy/http_proxy | awk '{print $1}'`
   no_proxy_size=`wc -c /etc/transproxy/no_proxy | awk '{print $1}'`
-  if [ $http_proxy_size -gt 5 ] && [ $no_proxy_size -gt 5 ]; then
+  if [ $http_proxy_size -gt 11 ] && [ $no_proxy_size -gt 9 ]; then
     /bin/systemctl enable transproxy.service
     /bin/systemctl restart transproxy.service
   else
