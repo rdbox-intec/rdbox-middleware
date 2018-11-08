@@ -10,10 +10,12 @@ hname=`/bin/hostname`
 
 if [[ $hname =~ $regex_master ]]; then
   /usr/bin/lsusb -t | /bin/grep -B 1 rt2800usb | /bin/grep -o "Port [0-9]*" | /bin/grep -o "[0-9]*" | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
+  /etc/init.d/networking stop
   mv /etc/network/interfaces /etc/network/interfaces.org
   ln -s /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/master/* /etc/rdbox/network/interfaces.d/current
-  /etc/init.d/networking restart
+  /etc/init.d/networking start
+  /usr/bin/touch /etc/rdbox/hostapd_be.deny
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
   /bin/systemctl enable dnsmasq.service
