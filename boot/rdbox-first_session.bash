@@ -16,6 +16,7 @@ if [[ $hname =~ $regex_master ]]; then
   cp -n /etc/rdbox/network/interfaces.d/master/* /etc/rdbox/network/interfaces.d/current
   /etc/init.d/networking start
   /usr/bin/touch /etc/rdbox/hostapd_be.deny
+  sed -i "/psk/a bssid=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
   /bin/systemctl enable dnsmasq.service
@@ -41,6 +42,7 @@ elif [[ $hname =~ $regex_slave ]]; then
   ln -s /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/slave/* /etc/rdbox/network/interfaces.d/current
   /sbin/ifconfig wlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
+  sed -i "/psk/a bssid_blacklist=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   /etc/init.d/networking restart
   /sbin/dhclient br0
   /bin/systemctl enable rdbox-boot.service
