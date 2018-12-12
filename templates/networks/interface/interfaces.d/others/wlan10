@@ -1,6 +1,6 @@
 auto wlan10
 allow-hotplug wlan10
-iface wlan10 inet dhcp
+iface wlan10 inet manual
 wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
 wireless-power off
 iface default inet dhcp

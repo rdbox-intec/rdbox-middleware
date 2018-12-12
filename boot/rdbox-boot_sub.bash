@@ -1,4 +1,6 @@
 #!/bin/bash
+export LC_ALL=C
+export LANG=C
 
 SSHD_TIMEOUT=120
 WPA_AUTH_TIMEOUT=30

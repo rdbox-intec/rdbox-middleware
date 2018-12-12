@@ -18,22 +18,22 @@ iptables -A OUTPUT -o lo -j ACCEPT
 iptables -A INPUT -i wlan0 -j ACCEPT
 # wlan1
 iptables -A INPUT -i wlan1 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in wlan2 --physdev-out bat0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-out wlan2 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in wlan3 --physdev-out bat0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-out wlan3 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in eth1 --physdev-out bat0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan2 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out wlan2 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan3 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out wlan3 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in eth1 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
 # wlan2
 iptables -A INPUT -i wlan2 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-out eth1 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in wlan2 --physdev-out wlan3 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in wlan3 --physdev-out wlan2 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in wlan2 --physdev-out eth1 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in eth1 --physdev-out wlan2 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out eth1 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan2 --physdev-is-bridged --physdev-out wlan3 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan3 --physdev-is-bridged --physdev-out wlan2 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan2 --physdev-is-bridged --physdev-out eth1 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in eth1 --physdev-is-bridged --physdev-out wlan2 -j ACCEPT
 # wlan3
 iptables -A INPUT -i wlan3 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in wlan3 --physdev-out eth1 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in eth1 --physdev-out wlan3 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan3 --physdev-is-bridged --physdev-out eth1 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in eth1 --physdev-is-bridged --physdev-out wlan3 -j ACCEPT
 
 
 iptables -A INPUT -p tcp ! --syn -m state --state NEW -j DROP

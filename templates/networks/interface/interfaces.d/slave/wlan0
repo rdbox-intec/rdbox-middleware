@@ -2,4 +2,3 @@ auto wlan0
 allow-hotplug wlan0
 iface wlan0 inet manual
   pre-up /sbin/ifconfig wlan0 mtu 1532
-  pre-up /usr/sbin/batctl if add wlan0
