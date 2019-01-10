@@ -56,6 +56,14 @@ iptables -A OUTPUT -o eth0 -p udp --dport 445 -j DROP
 iptables -A INPUT -i br0 -j ACCEPT
 iptables -A FORWARD -i eth0 -o br0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 iptables -A FORWARD -i br0 -o eth0 -j ACCEPT
+iptables -A INPUT -i docker0 -j ACCEPT
+iptables -A OUTPUT -o docker0 -j ACCEPT
+iptables -A FORWARD -i docker0 -j ACCEPT
+iptables -A FORWARD -o docker0 -j ACCEPT
+iptables -A INPUT -i cni0 -j ACCEPT
+iptables -A OUTPUT -o cni0 -j ACCEPT
+iptables -A FORWARD -i cni0 -j ACCEPT
+iptables -A FORWARD -o cni0 -j ACCEPT
 
 #################
 #SNAT(masquerade)
