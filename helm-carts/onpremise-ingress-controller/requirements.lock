@@ -1,0 +1,9 @@
+dependencies:
+- name: metallb
+  repository: https://kubernetes-charts.storage.googleapis.com
+  version: 0.8.3
+- name: nginx-ingress
+  repository: https://kubernetes-charts.storage.googleapis.com
+  version: 1.1.1
+digest: sha256:a7c8d2f72fceea7176269b2c8202c25ad3977abe133bcfc18eb3df1f13b23d8f
+generated: 2019-01-16T13:55:51.756790166+09:00

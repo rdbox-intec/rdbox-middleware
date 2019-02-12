@@ -1,5 +1,5 @@
-rdbox (0.0.1-1~rdb1) jessie; urgency=medium
+rdbox (0.0.25) stretch; urgency=medium
 
-  * First make.
+  * Open Source Version
 
- -- INTEC ATI <info-ati@intec.co.jp>  Mon, 05 Feb 2018 16:55:06 +0900
+ -- INTEC ATI <info-ati@intec.co.jp>  Thu, 12 Feb 2018 16:55:06 +0900

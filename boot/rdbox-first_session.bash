@@ -36,6 +36,7 @@ if [[ $hname =~ $regex_master ]]; then
     /bin/systemctl disable transproxy.service
     /bin/systemctl stop transproxy.service
   fi
+  snap install helm --classic
 elif [[ $hname =~ $regex_slave ]]; then
   /usr/bin/lsusb -t | /bin/grep -B 1 rt2800usb | /bin/grep -o "Port [0-9]*" | /bin/grep -o "[0-9]*" | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv /etc/network/interfaces /etc/network/interfaces.org

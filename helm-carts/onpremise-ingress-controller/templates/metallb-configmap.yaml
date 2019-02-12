@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.metallb.existingConfigMap }}
+  labels:
+    app.kubernetes.io/name: {{ include "onpremise-ingress-controller.name" . }}
+    helm.sh/chart: {{ include "onpremise-ingress-controller.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  config: |
+    address-pools:
+    - name: default
+      protocol: layer2
+      addresses:
+      - {{ .Values.address }}
