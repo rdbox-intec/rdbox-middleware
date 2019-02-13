@@ -11,18 +11,18 @@ hname=`/bin/hostname`
 if [[ $hname =~ $regex_master ]]; then
   /usr/bin/lsusb -t | /bin/grep -B 1 rt2800usb | /bin/grep -o "Port [0-9]*" | /bin/grep -o "[0-9]*" | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   /etc/init.d/networking stop
-  mv /etc/network/interfaces /etc/network/interfaces.org
-  ln -s /etc/rdbox/network/interfaces /etc/network/interfaces
+  mv -n /etc/network/interfaces /etc/network/interfaces.org
+  ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/master/* /etc/rdbox/network/interfaces.d/current
   /etc/init.d/networking start
   /usr/bin/touch /etc/rdbox/hostapd_be.deny
-  sed -i "/psk/a bssid=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
+  #sed -i "/psk/a bssid=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
+  sed -i "/^#bssid$/c bssid=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
   /bin/systemctl enable dnsmasq.service
   /bin/systemctl restart dnsmasq.service
   mkdir -p /usr/local/share/rdbox
-  echo "/usr/local/share/rdbox 192.168.179.0/24(rw,sync,no_subtree_check,no_root_squash,no_all_squash)" >> /etc/exports
   /bin/systemctl enable nfs-kernel-server.service
   /bin/systemctl start nfs-kernel-server.service
   sed -i '/^#ListenAddress 0.0.0.0$/c ListenAddress 192.168.179.1' /etc/ssh/sshd_config
@@ -39,23 +39,24 @@ if [[ $hname =~ $regex_master ]]; then
   snap install helm --classic
 elif [[ $hname =~ $regex_slave ]]; then
   /usr/bin/lsusb -t | /bin/grep -B 1 rt2800usb | /bin/grep -o "Port [0-9]*" | /bin/grep -o "[0-9]*" | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
-  mv /etc/network/interfaces /etc/network/interfaces.org
-  ln -s /etc/rdbox/network/interfaces /etc/network/interfaces
+  mv -n /etc/network/interfaces /etc/network/interfaces.org
+  ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/slave/* /etc/rdbox/network/interfaces.d/current
   /sbin/ifconfig wlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
-  sed -i "/psk/a bssid_blacklist=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
+  #sed -i "/psk/a bssid_blacklist=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
+  sed -i "/^#bssid_blacklist$/c bssid_blacklist=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   /etc/init.d/networking restart
   /sbin/dhclient br0
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
-  sed -i '/^#timeout 60;$/c timeout 10;' /etc/dhcp/dhclient.conf
+  sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
 elif [[ $hname =~ $regex_vpnbridge ]]; then
-  mv /etc/network/interfaces /etc/network/interfaces.org
-  ln -s /etc/rdbox/network/interfaces /etc/network/interfaces
+  mv -n /etc/network/interfaces /etc/network/interfaces.org
+  ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/vpnbridge/* /etc/rdbox/network/interfaces.d/current
-  ln -s /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
+  ln -fs /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
   /etc/init.d/networking restart
   /sbin/ifup wlan10
   /sbin/dhclient wlan10 
@@ -66,13 +67,37 @@ elif [[ $hname =~ $regex_vpnbridge ]]; then
   /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
   /bin/systemctl restart softether-vpnbridge.service
 else
-  mv /etc/network/interfaces /etc/network/interfaces.org
-  ln -s /etc/rdbox/network/interfaces /etc/network/interfaces
+  mv -n /etc/network/interfaces /etc/network/interfaces.org
+  ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/others/* /etc/rdbox/network/interfaces.d/current
-  ln -s /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
+  ln -fs /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
   /etc/init.d/networking restart
   /sbin/ifup wlan10
   /sbin/dhclient wlan10 
 fi
+
+if [ -e '/boot/id_rsa' ]; then
+  for user in `ls /home`; do
+    home_dir=/home/$user
+    mkdir -p -m 700 $home_dir/.ssh
+    cp -n /boot/id_rsa $home_dir/.ssh/id_rsa
+    chmod 600 $home_dir/.ssh/id_rsa
+    chown -R $user:$user $home_dir/.ssh
+  done
+fi
+
+if [ -e '/boot/id_rsa.pub' ]; then
+  for user in `ls /home`; do
+    home_dir=/home/$user
+    mkdir -p -m 700 $home_dir/.ssh
+    cat /boot/id_rsa.pub >> $home_dir/.ssh/authorized_keys
+    chmod 600 $home_dir/.ssh/authorized_keys
+    chown -R $user:$user $home_dir/.ssh
+  done
+fi
+
+touch /var/lib/rdbox/.completed_first_session
+rm /boot/id_rsa
+rm /boot/id_rsa.pub
 
 exit 0

@@ -35,13 +35,27 @@ hups () {
 }
 
 start () {
-	if [[ $hname =~ $regex_master ]]; then
-	  source /etc/rdbox/network/iptables > /var/log/rdbox_boot.log 2>&1
-	  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> /var/log/rdbox_boot.log 2>&1
-	elif [[ $hname =~ $regex_slave ]]; then
-	  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > /var/log/rdbox_boot.log 2>&1
-	else
-	  echo "OK!!"
+	if [ -e "/var/lib/rdbox/.completed_first_session" ]; then
+		if [[ $hname =~ $regex_master ]]; then
+		  source /etc/rdbox/network/iptables > /var/log/rdbox_boot.log 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> /var/log/rdbox_boot.log 2>&1
+		elif [[ $hname =~ $regex_slave ]]; then
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > /var/log/rdbox_boot.log 2>&1
+		else
+		  echo "OK!!"
+		fi
+	else:
+		# RETRY ######################
+		source /opt/rdbox/boot/rdbox-first_session.bash
+		##############################
+		if [[ $hname =~ $regex_master ]]; then
+		  source /etc/rdbox/network/iptables > /var/log/rdbox_boot.log 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> /var/log/rdbox_boot.log 2>&1
+		elif [[ $hname =~ $regex_slave ]]; then
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > /var/log/rdbox_boot.log 2>&1
+		else
+		  echo "OK!!"
+		fi
 	fi
 	return 0
 }
