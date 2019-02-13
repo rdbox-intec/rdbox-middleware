@@ -56,7 +56,7 @@ install/rdbox::
 	install -pd $(DEB_DESTDIR)opt/rdbox/bin
 	install -pd $(DEB_DESTDIR)usr/bin
 	cp -rf bin/* $(DEB_DESTDIR)opt/rdbox/bin
-	chmod +x $(DEB_DESTDIR)opt/rdbox/bin/rdbox/rdbox_cli
+	chmod +x $(DEB_DESTDIR)opt/rdbox/bin/rdbox_cli
 	ln -s /opt/rdbox/bin/rdbox_cli $(DEB_DESTDIR)usr/bin
 	install -pm 644 bin/rdbox_cli.conf $(DEB_DESTDIR)etc/rdbox
 	# ansible
