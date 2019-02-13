@@ -12,7 +12,6 @@ install/rdbox::
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/vpnbridge
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others
-	install -pm 644 templates/rdbox_cli.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_ap_an.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_be.conf $(DEB_DESTDIR)etc/rdbox
