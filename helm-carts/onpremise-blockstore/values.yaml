@@ -1,0 +1,21 @@
+openebs:
+  apiserver:
+    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
+
+  provisioner:
+    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
+
+  localprovisioner:
+    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
+
+  snapshotOperator:
+    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
+
+  ndm:
+    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
+
+  ndmOperator:
+    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
+
+  webhook:
+    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}

@@ -94,12 +94,16 @@ def main():
     if hasattr(args, 'handler'):
         r_logger_setup()
         r_logger.info("[rdbox_cli] Start.")
+        r_print.info("[rdbox_cli] Start.")
+        r_print.info("")
         r_logger.info("ARGS: {args}".format(args=args))
         ret = args.handler(args)
         if ret:
             if "ClassifierForGetCommand" not in args.handler.__qualname__:
+                r_print.info("")
                 r_print.info("[rdbox_cli] Success completed.")
         else:
+            r_print.info("")
             r_print.info("[rdbox_cli] Error occurred.")
     else:
         parser.print_help()

@@ -25,11 +25,14 @@ class ClassifierForEnableCommand(ClassifierForEnableDisableCommand):
         if cls._validation(args.function_type) is False:
             return False
         # helm
-        helm_chart_name = cls._map_func_to_helm(args.function_type)
+        helm_chart_name_list = cls._map_func_to_helm(args.function_type)
         helm = HelmControl()
-        is_success = helm.install_all(helm_chart_name, args)
-        if not is_success:
-            return False
+        for index, helm_chart_name in enumerate(helm_chart_name_list):
+            r_print.info('###### helm job {idx}/{total} ######'.format(idx=str(index + 1), total=str(len(helm_chart_name_list))))
+            is_success = helm.install_all(helm_chart_name, args)
+            if not is_success:
+                return False
+        r_print.info('###### characteristic job for {func} ######'.format(func=args.function_type))
         if args.function_type == cls.FUNCTYPES_LIST[0]:
             # add cron
             c = CrontabControl()
@@ -38,7 +41,7 @@ class ClassifierForEnableCommand(ClassifierForEnableDisableCommand):
         elif args.function_type == cls.FUNCTYPES_LIST[1]:
             ret = -1
             cache_url = helm.get_docker_registry_ingress_hosts_all(
-                helm_chart_name, args)
+                helm_chart_name_list[0], args)
             if cache_url != "":
                 ac = AnsibleControl()
                 ret = ac.playbook_dockerconfig_enable_all(cache_url)

@@ -13,12 +13,13 @@ class ClassifierForEnableDisableCommand(object):
 
     FUNCTYPES = "k8s_external_svc|temporary_cache_registry"
     FUNCTYPES_LIST = FUNCTYPES.split("|")
-    HELMTYPES = "onpremise-ingress-controller|temporary-cache-registry"
+    HELMTYPES = "onpremise-ingress-controller/onpremise-blockstore|temporary-cache-registry"
     HELMTYPES_LIST = HELMTYPES.split("|")
     FUNC_HELM_MAPPING = {}
 
     for index, _ in enumerate(FUNCTYPES_LIST):
-        FUNC_HELM_MAPPING[FUNCTYPES_LIST[index]] = HELMTYPES_LIST[index]
+        helm_list = HELMTYPES_LIST[index].split("/")
+        FUNC_HELM_MAPPING[FUNCTYPES_LIST[index]] = helm_list
 
     @classmethod
     def _validation(cls, function_type):
