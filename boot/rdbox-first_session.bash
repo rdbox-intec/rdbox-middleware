@@ -10,23 +10,25 @@ hname=`/bin/hostname`
 
 if [[ $hname =~ $regex_master ]]; then
   /usr/bin/lsusb -t | /bin/grep -B 1 rt2800usb | /bin/grep -o "Port [0-9]*" | /bin/grep -o "[0-9]*" | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
-  /etc/init.d/networking stop
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/master/* /etc/rdbox/network/interfaces.d/current
-  /etc/init.d/networking start
+  sed -i '/^#ListenAddress 0.0.0.0$/c ListenAddress 192.168.179.1' /etc/ssh/sshd_config
+  /bin/systemctl stop sshd.service
+  /bin/systemctl stop networking.service
+  /bin/systemctl start networking.service
+  /bin/systemctl start sshd.service
   /usr/bin/touch /etc/rdbox/hostapd_be.deny
-  #sed -i "/psk/a bssid=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   sed -i "/^#bssid$/c bssid=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl enable rdbox-boot.service
+  touch /var/lib/rdbox/.completed_first_session
   /bin/systemctl restart rdbox-boot.service
+  rm -rf /var/lib/rdbox/.completed_first_session
   /bin/systemctl enable dnsmasq.service
   /bin/systemctl restart dnsmasq.service
   mkdir -p /usr/local/share/rdbox
   /bin/systemctl enable nfs-kernel-server.service
   /bin/systemctl start nfs-kernel-server.service
-  sed -i '/^#ListenAddress 0.0.0.0$/c ListenAddress 192.168.179.1' /etc/ssh/sshd_config
-  /etc/init.d/ssh restart
   http_proxy_size=`wc -c /etc/transproxy/http_proxy | awk '{print $1}'`
   no_proxy_size=`wc -c /etc/transproxy/no_proxy | awk '{print $1}'`
   if [ $http_proxy_size -gt 12 ] && [ $no_proxy_size -gt 10 ]; then
@@ -43,12 +45,16 @@ elif [[ $hname =~ $regex_slave ]]; then
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/slave/* /etc/rdbox/network/interfaces.d/current
   /sbin/ifconfig wlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
-  #sed -i "/psk/a bssid_blacklist=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   sed -i "/^#bssid_blacklist$/c bssid_blacklist=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
-  /etc/init.d/networking restart
+  /bin/systemctl stop sshd.service
+  /bin/systemctl stop networking.service
+  /bin/systemctl start networking.service
+  /bin/systemctl start sshd.service
   /sbin/dhclient br0
   /bin/systemctl enable rdbox-boot.service
+  touch /var/lib/rdbox/.completed_first_session
   /bin/systemctl restart rdbox-boot.service
+  rm -rf /var/lib/rdbox/.completed_first_session
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
   sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
@@ -57,7 +63,10 @@ elif [[ $hname =~ $regex_vpnbridge ]]; then
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/vpnbridge/* /etc/rdbox/network/interfaces.d/current
   ln -fs /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
-  /etc/init.d/networking restart
+  /bin/systemctl stop sshd.service
+  /bin/systemctl stop networking.service
+  /bin/systemctl start networking.service
+  /bin/systemctl start sshd.service
   /sbin/ifup wlan10
   /sbin/dhclient wlan10 
   /sbin/ip addr del `ip -f inet -o addr show eth0|cut -d\  -f 7 | cut -d/ -f 1`/24 dev eth0
@@ -71,7 +80,10 @@ else
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/others/* /etc/rdbox/network/interfaces.d/current
   ln -fs /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
-  /etc/init.d/networking restart
+  /bin/systemctl stop sshd.service
+  /bin/systemctl stop networking.service
+  /bin/systemctl start networking.service
+  /bin/systemctl start sshd.service
   /sbin/ifup wlan10
   /sbin/dhclient wlan10 
 fi
