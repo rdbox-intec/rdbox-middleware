@@ -44,7 +44,7 @@ start () {
 		else
 		  echo "OK!!"
 		fi
-	else:
+	else
 		# RETRY ######################
 		source /opt/rdbox/boot/rdbox-first_session.bash
 		##############################
