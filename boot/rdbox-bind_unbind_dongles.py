@@ -21,7 +21,7 @@ def main():
     mac_set_before = set(mac_all)
     for i, row in enumerate(datas):
         i = i + 1
-        port = row[0].split(":")[0]
+        port = row[0].split(":")[0][:-2] + ".%s" % str(i)
         cmd = 'echo -n "%s" > /sys/bus/usb/drivers/usb/unbind' % port
         print cmd
         subprocess.call(cmd, shell=True)
@@ -41,8 +41,9 @@ def main():
     append_cmd = "echo '%s' >> /etc/udev/rules.d/70-persistent-net.rules" % rules
     print append_cmd
     subprocess.call(append_cmd, shell=True)
-    for row in datas:
-        port = row[0].split(":")[0]
+    for i, row in enumerate(datas):
+        i = i + 1
+        port = row[0].split(":")[0][:-2] + ".%s" % str(i)
         cmd = 'echo -n "%s" > /sys/bus/usb/drivers/usb/bind' % port
         print cmd
         subprocess.call(cmd, shell=True)

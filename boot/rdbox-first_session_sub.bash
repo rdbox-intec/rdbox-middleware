@@ -108,8 +108,7 @@ if [ -e '/boot/id_rsa.pub' ]; then
   rm -rf /boot/id_rsa.pub
 fi
 
-sed -e "2 s/HypriotOS/RDBOX on HypriotOS/g" /etc/motd | tee /etc/motd
-sed -i "/RDBOX/a \
+sed -i "/HypriotOS/a \
 . \n \
             .___. \n \
            /___/| \n \
