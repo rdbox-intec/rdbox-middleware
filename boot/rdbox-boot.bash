@@ -5,6 +5,7 @@ export LANG=C
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
+regix_processing='^.*processing.*'
 hname=`/bin/hostname`
 PIDFILE_SUPLICANT=/var/run/wpa_supplicant.wlan0.pid
 PIDFILE_HOSTAPD=/var/run/hostapd.pid
@@ -35,7 +36,11 @@ hups () {
 }
 
 start () {
-	if [ -e "/var/lib/rdbox/.completed_first_session" ]; then
+	first_session_status = `cat /var/lib/rdbox/.completed_first_session`
+	if [[ $first_session_status =~ $regix_processing  ]]; then
+		# RETRY ######################
+		source /opt/rdbox/boot/rdbox-first_session.bash
+		##############################
 		if [[ $hname =~ $regex_master ]]; then
 		  source /etc/rdbox/network/iptables > /var/log/rdbox_boot.log 2>&1
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> /var/log/rdbox_boot.log 2>&1
@@ -45,9 +50,6 @@ start () {
 		  echo "OK!!"
 		fi
 	else
-		# RETRY ######################
-		source /opt/rdbox/boot/rdbox-first_session.bash
-		##############################
 		if [[ $hname =~ $regex_master ]]; then
 		  source /etc/rdbox/network/iptables > /var/log/rdbox_boot.log 2>&1
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> /var/log/rdbox_boot.log 2>&1
