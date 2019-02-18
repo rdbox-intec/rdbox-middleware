@@ -50,6 +50,7 @@ install/rdbox::
 	install -pm 755 boot/rdbox-boot.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/rdbox-boot_sub.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/rdbox-first_session.bash $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/rdbox-first_session_sub.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/to_run_kubeadm_join_after_communicating_with $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/sub_to_run_kubeadm_join_after_communicating_with.bash $(DEB_DESTDIR)opt/rdbox/boot
 	# rdbox
