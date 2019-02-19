@@ -36,7 +36,7 @@ hups () {
 }
 
 start () {
-	first_session_status = `cat /var/lib/rdbox/.completed_first_session`
+	first_session_status=`cat /var/lib/rdbox/.completed_first_session`
 	if [[ $first_session_status =~ $regix_processing  ]]; then
 		# RETRY ######################
 		source /opt/rdbox/boot/rdbox-first_session.bash
