@@ -21,6 +21,7 @@ if [[ $hname =~ $regex_master ]]; then
   sed -i "/^#bssid$/c bssid=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
+  echo "processing" > /var/lib/rdbox/.completed_first_session
   /bin/systemctl enable dnsmasq.service
   /bin/systemctl restart dnsmasq.service
   mkdir -p /usr/local/share/rdbox

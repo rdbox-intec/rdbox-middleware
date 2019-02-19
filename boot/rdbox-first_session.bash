@@ -5,7 +5,7 @@ regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
 hname=`/bin/hostname`
 
-echo "processing" > /var/lib/rdbox/.completed_first_session
+echo "first" > /var/lib/rdbox/.completed_first_session
 
 /bin/bash /opt/rdbox/boot/rdbox-first_session_sub.bash >> /var/log/rdbox_first_session.log 2>&1
 
