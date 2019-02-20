@@ -21,7 +21,37 @@ if [[ $hname =~ $regex_master ]]; then
   sed -i "/^#bssid$/c bssid=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
-  echo "processing" > /var/lib/rdbox/.completed_first_session
+#################################################################
+# config dnsmqsq
+echo 'no-dhcp-interface=eth0,wlan0,wlan1,wlan2,wlan3
+listen-address=127.0.0.1,192.168.179.1
+interface=br0
+dhcp-leasefile=/etc/rdbox/dnsmasq.resolver.conf
+domain=rdbox.lan
+expand-hosts
+no-hosts
+resolv-file=/etc/rdbox/
+server=//192.168.179.1
+server=/rdbox.lan/192.168.179.1
+server=/179.168.192.in-addr.arpa/192.168.179.1
+local=/rdbox.lan/
+addn-hosts=/etc/rdbox/dnsmasq.hosts.conf
+addn-hosts=/etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
+dhcp-range=192.168.179.11,192.168.179.254,255.255.255.0,30d
+dhcp-option=option:router,192.168.179.1
+dhcp-option=option:dns-server,192.168.179.1
+dhcp-option=option:ntp-server,192.168.179.1
+port=53
+' > /etc/rdbox/dnsmasq.conf
+echo '192.168.179.1 rdbox-master-00 rdbox-master-00.rdbox.lan
+192.168.179.2 rdbox-k8s-master rdbox-k8s-master.rdbox.lan
+192.168.179.3 rdbox-k8s-vpn rdbox-k8s-vpn.rdbox.lan
+' > /etc/rdbox/dnsmasq.hosts.conf
+echo 'nameserver 8.8.8.8
+nameserver 8.8.4.4
+' > /etc/rdbox/dnsmasq.resolver.conf
+touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
+#################################################################
   /bin/systemctl enable dnsmasq.service
   /bin/systemctl restart dnsmasq.service
   mkdir -p /usr/local/share/rdbox
@@ -49,11 +79,9 @@ elif [[ $hname =~ $regex_slave ]]; then
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
-  /sbin/dhclient br0
-  touch /var/lib/rdbox/.completed_first_session
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
-  rm -rf /var/lib/rdbox/.completed_first_session
+  /sbin/dhclient br0
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
   sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
@@ -109,6 +137,7 @@ if [ -e '/boot/id_rsa.pub' ]; then
   rm -rf /boot/id_rsa.pub
 fi
 
+sed -i "s/HypriotOS/RDBOX based on HypriotOS/g" /etc/motd
 sed -i "/HypriotOS/a \
 . \n \
             .___. \n \
