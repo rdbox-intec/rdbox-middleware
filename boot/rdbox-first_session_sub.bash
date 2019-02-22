@@ -8,6 +8,9 @@ hname=`/bin/hostname`
 # Pickup the hostname changes
 /bin/systemctl restart avahi-daemon
 
+chmod 777 /var/lib/rdbox
+chmod 777 /var/log/rdbox
+
 if [[ $hname =~ $regex_master ]]; then
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv -n /etc/network/interfaces /etc/network/interfaces.org
@@ -26,15 +29,15 @@ if [[ $hname =~ $regex_master ]]; then
 echo 'no-dhcp-interface=eth0,wlan0,wlan1,wlan2,wlan3
 listen-address=127.0.0.1,192.168.179.1
 interface=br0
-dhcp-leasefile=/etc/rdbox/dnsmasq.resolver.conf
 domain=rdbox.lan
 expand-hosts
 no-hosts
-resolv-file=/etc/rdbox/
 server=//192.168.179.1
 server=/rdbox.lan/192.168.179.1
 server=/179.168.192.in-addr.arpa/192.168.179.1
 local=/rdbox.lan/
+resolv-file=/etc/rdbox/dnsmasq.resolver.conf
+dhcp-leasefile=/etc/rdbox/dnsmasq.leases
 addn-hosts=/etc/rdbox/dnsmasq.hosts.conf
 addn-hosts=/etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
 dhcp-range=192.168.179.11,192.168.179.254,255.255.255.0,30d

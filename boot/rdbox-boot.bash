@@ -9,6 +9,7 @@ regex_other='^.*other.*'
 hname=`/bin/hostname`
 PIDFILE_SUPLICANT=/var/run/wpa_supplicant.wlan0.pid
 PIDFILE_HOSTAPD=/var/run/hostapd.pid
+BOOT_LOG=/var/log/rdbox/rdbox_boot.log
 
 hups () {
         PID=$1
@@ -40,10 +41,10 @@ start () {
         kill -0 $first_session_status > /dev/null 2>&1
 	if [ $? = 0 ]; then
 		if [[ $hname =~ $regex_master ]]; then
-		  source /etc/rdbox/network/iptables > /var/log/rdbox_boot.log 2>&1
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> /var/log/rdbox_boot.log 2>&1
+		  source /etc/rdbox/network/iptables > $BOOT_LOG 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
 		elif [[ $hname =~ $regex_slave ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > /var/log/rdbox_boot.log 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		else
 		  echo "OK!!"
 		fi
@@ -57,10 +58,10 @@ start () {
 			##############################
 		fi
 		if [[ $hname =~ $regex_master ]]; then
-		  source /etc/rdbox/network/iptables > /var/log/rdbox_boot.log 2>&1
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> /var/log/rdbox_boot.log 2>&1
+		  source /etc/rdbox/network/iptables > $BOOT_LOG 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
 		elif [[ $hname =~ $regex_slave ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > /var/log/rdbox_boot.log 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		else
 		  echo "OK!!"
 		fi
