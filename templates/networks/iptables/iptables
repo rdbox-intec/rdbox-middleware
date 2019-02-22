@@ -68,7 +68,7 @@ iptables -A FORWARD -o cni0 -j ACCEPT
 #################
 #SNAT(masquerade)
 #################
-iptables -t nat -A POSTROUTING -o eth0 -s 192.168.179.0/24 -j MASQUERADE
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
 
 ###########
 #VPNBridge

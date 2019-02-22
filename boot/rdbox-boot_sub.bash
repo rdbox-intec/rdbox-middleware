@@ -188,8 +188,8 @@ for_slave () {
     COUNT=`expr $COUNT + 1`
   done
   # Success Connection
-  sleep 10
-  /sbin/dhclient br0
+  /sbin/dhclient -4 br0
+  /sbin/brctl addif br0 eth0
   return 0
 }
 
@@ -213,7 +213,7 @@ bootup () {
   fi
   if [ $? -gt 0 ]; then
     echo heartbeat | tee /sys/class/leds/led0/trigger
-    sleep 30
+    sleep 600
     reboot
   fi
 }

@@ -12,7 +12,6 @@ install/rdbox::
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/vpnbridge
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others
-	install -pm 644 templates/rdbox_cli.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_ap_an.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_be.conf $(DEB_DESTDIR)etc/rdbox
@@ -51,13 +50,14 @@ install/rdbox::
 	install -pm 755 boot/rdbox-boot.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/rdbox-boot_sub.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/rdbox-first_session.bash $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/rdbox-first_session_sub.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/to_run_kubeadm_join_after_communicating_with $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/sub_to_run_kubeadm_join_after_communicating_with.bash $(DEB_DESTDIR)opt/rdbox/boot
 	# rdbox
 	install -pd $(DEB_DESTDIR)opt/rdbox/bin
 	install -pd $(DEB_DESTDIR)usr/bin
 	cp -rf bin/* $(DEB_DESTDIR)opt/rdbox/bin
-	chmod +x $(DEB_DESTDIR)opt/rdbox/bin/rdbox/rdbox_cli
+	chmod +x $(DEB_DESTDIR)opt/rdbox/bin/rdbox_cli
 	ln -s /opt/rdbox/bin/rdbox_cli $(DEB_DESTDIR)usr/bin
 	install -pm 644 bin/rdbox_cli.conf $(DEB_DESTDIR)etc/rdbox
 	# ansible
