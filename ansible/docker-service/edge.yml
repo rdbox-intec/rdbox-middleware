@@ -1,0 +1,14 @@
+- hosts: edge
+  remote_user: ubuntu
+  become: yes
+  roles:
+    - ansible-role-docker
+    - ansible-ca-certificates
+  vars:
+    docker_config_bip: ""
+    docker_config_fixed_cidr: ""
+    docker_config_bridge: ""
+    docker_config_custom: "{{ registrymirrors }}"
+    ca_certificates_certificate_map:
+      - src: /etc/rdbox/certs/rdbox-common-tls.crt
+        dest: rdbox/Rdbox-Common-Tls.crt

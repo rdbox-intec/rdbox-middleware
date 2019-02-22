@@ -1,0 +1,6 @@
+[submodule "ansible/docker-service/.submodules/ansible-role-docker"]
+	path = ansible/docker-service/.submodules/ansible-role-docker
+	url = https://github.com/gbolo/ansible-role-docker.git
+[submodule "ansible/docker-service/.submodules/ansible-ca-certificates"]
+	path = ansible/docker-service/.submodules/ansible-ca-certificates
+	url = https://github.com/Oefenweb/ansible-ca-certificates.git

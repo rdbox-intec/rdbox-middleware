@@ -1,0 +1,2 @@
+1. Get the application IP.
+kubectl get service

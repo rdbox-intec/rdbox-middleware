@@ -5,6 +5,6 @@ iface br0 inet static
   network 192.168.179.0
   broadcast 192.168.179.255
   dns-nameservers 192.168.179.1 8.8.8.8 8.8.4.4
-  bridge_ports bat0
+  bridge_ports bat0 eth1
   bridge_stp off
   bridge_maxwait 1
