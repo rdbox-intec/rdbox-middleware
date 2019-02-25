@@ -70,6 +70,8 @@ touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
     /bin/systemctl disable transproxy.service
     /bin/systemctl stop transproxy.service
   fi
+  apt update
+  apt upgrade
   snap install helm --classic
 elif [[ $hname =~ $regex_slave ]]; then
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
@@ -105,6 +107,8 @@ elif [[ $hname =~ $regex_vpnbridge ]]; then
   sleep 30
   /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
   /bin/systemctl restart softether-vpnbridge.service
+  apt update
+  apt upgrade
 else
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
@@ -116,6 +120,8 @@ else
   /bin/systemctl start sshd.service
   /sbin/ifup wlan10
   /sbin/dhclient wlan10 
+  apt update
+  apt upgrade
 fi
 
 if [ -e '/boot/id_rsa' ]; then

@@ -62,10 +62,12 @@ class ClassifierForInitCommand(object):
                 else:
                     cls._gen_key(key_path, crt_path)
                     cls._print_separator("#")
+                    cls._kubectl_create_ns(cls.KUBECTL_COMMON_CERT_NSPACE)
                     cls._kubectl_secret_tls(key_path, crt_path)
             else:
                 cls._gen_key(key_path, crt_path)
                 cls._print_separator("#")
+                cls._kubectl_create_ns(cls.KUBECTL_COMMON_CERT_NSPACE)
                 cls._kubectl_secret_tls(key_path, crt_path)
             cls._print_separator("#")
         except:
@@ -137,8 +139,21 @@ class ClassifierForInitCommand(object):
         return b64.decode('utf-8')
 
     @classmethod
-    def _kubectl_secret_tls(cls, key_path, crt_path):
+    def _kubectl_create_ns(cls, ns):
         r_print.info("<<Step2. Set a certificate to k8s via secret.>>")
+        meta_obj = kubernetes.client.V1ObjectMeta(name=ns)
+        body = kubernetes.client.V1Namespace(metadata=meta_obj)
+        body.metadata.name = ns
+        opts = {"body": body}
+        k8s_core_v1 = K8sClientCoreV1Api("create_namespace", opts)
+        try:
+            v1_ns = k8s_core_v1.call()
+        except Exception as e:
+            pass
+        r_print.info("created ns")
+
+    @classmethod
+    def _kubectl_secret_tls(cls, key_path, crt_path):
         # delete
         opts = {"name": cls.KUBECTL_COMMON_CERT_NAME, "namespace": cls.KUBECTL_COMMON_CERT_NSPACE, "body": kubernetes.client.V1DeleteOptions()}
         k8s_core_v1 = K8sClientCoreV1Api("delete_namespaced_secret", opts)
