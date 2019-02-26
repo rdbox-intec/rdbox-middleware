@@ -26,6 +26,7 @@ class HelmControl(object):
         work_path = os.path.join(rdbox.config.get("helm", "work_dir"), helm_chart_name)
         original_user = os.environ['SUDO_USER'] if 'SUDO_USER' in os.environ else os.environ['USER']
         helm_home = self._get_helm_home(original_user)
+        kube_config = self._get_kube_config(original_user)
         # helm get chart
         self.get_chart(chart_path, work_path)
         # helm dep up
@@ -36,7 +37,7 @@ class HelmControl(object):
             r_print.info("Disable helm-charts.")
             return False
         # helm install
-        is_success = self.install(work_path, helm_chart_name, helm_home, args.set)
+        is_success = self.install(work_path, helm_chart_name, helm_home, kube_config, args.set)
         if is_success:
             r_print.info("Enable helm-charts.")
         else:
@@ -47,7 +48,8 @@ class HelmControl(object):
     def delete_all(self, helm_chart_name, args):
         original_user = os.environ['SUDO_USER'] if 'SUDO_USER' in os.environ else os.environ['USER']
         helm_home = self._get_helm_home(original_user)
-        is_success = self.delete(helm_chart_name, helm_home)
+        kube_config = self._get_kube_config(original_user)
+        is_success = self.delete(helm_chart_name, helm_home, kube_config)
         if is_success:
             r_print.info("Disable helm-charts.")
         else:
@@ -81,15 +83,15 @@ class HelmControl(object):
     def get_chart(self, src, dst):
         copy_tree(src, dst)
 
-    def delete(self, helm_chart_name, helm_home, **kwargs):
-        base_cmd = '{helm} delete --purge --home {helm_home} {name}'.format(helm=self.HELM_BIN_PATH, helm_home=helm_home, name=helm_chart_name)
+    def delete(self, helm_chart_name, helm_home, kube_config, **kwargs):
+        base_cmd = '{helm} delete --purge --home {helm_home} --kubeconfig {kube_config} {name}'.format(helm=self.HELM_BIN_PATH, helm_home=helm_home, kube_config=kube_config, name=helm_chart_name)
         base_cmd += self._kwargs_to_command(self.HELM_DELETE_FLG, **kwargs)
         is_success = self._subprocess_popen_with_judge(base_cmd.strip(), "deleted", "not found")
         return is_success
 
-    def install(self, work_path, helm_chart_name, helm_home, sets, **kwargs):
+    def install(self, work_path, helm_chart_name, helm_home, kube_config, sets, **kwargs):
         parsed_set_command, _ = self.parse_set_flag(sets) # ex) "--set a=1,b=2"
-        base_cmd = '{helm} install {work_path} --name {name} --home {helm_home} --namespace {namespace} {sets}'.format(helm=self.HELM_BIN_PATH, work_path=work_path, name=helm_chart_name, helm_home=helm_home, namespace=rdbox.config.get("kubernetes", "rdbox_namespace"), sets=parsed_set_command)
+        base_cmd = '{helm} install {work_path} --name {name} --home {helm_home} --kubeconfig {kube_config} --namespace {namespace} {sets}'.format(helm=self.HELM_BIN_PATH, work_path=work_path, name=helm_chart_name, helm_home=helm_home, kube_config=kube_config, namespace=rdbox.config.get("kubernetes", "rdbox_namespace"), sets=parsed_set_command)
         base_cmd += self._kwargs_to_command(self.HELM_INSTALL_FLG, **kwargs)
         is_success = self._subprocess_popen_with_judge(base_cmd.strip(), "STATUS: DEPLOYED", "already exists")
         return is_success
@@ -137,6 +139,14 @@ class HelmControl(object):
             path = "/home/{user}/.helm".format(user=user)
         return path
 
+    def _get_kube_config(self, user):
+        path = ""
+        if user == "root":
+            path = "/root/.kube/config"
+        else:
+            path = "/home/{user}/.kube/config".format(user=user)
+        return path
+
     def _kwargs_to_command(self, external_flag_list=[], **kwargs):
         command = ""
         for key, value in kwargs:
@@ -149,12 +159,4 @@ class HelmControl(object):
                 command += " "
                 continue
         return command
-
-
-
-
-
-
-
-
 

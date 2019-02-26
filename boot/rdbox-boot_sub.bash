@@ -11,8 +11,8 @@ hname=`/bin/hostname`
 USER=roboticist
 PORT=12810
 RETRY_COUNT=5
-WPA_LOG=/var/log/rdbox_boot_wpa.log
-HOSTAPD_LOG=/var/log/rdbox_boot_hostapd.log
+WPA_LOG=/var/log/rdbox/rdbox_boot_wpa.log
+HOSTAPD_LOG=/var/log/rdbox/rdbox_boot_hostapd.log
 
 wait_ssh () {
   COUNT=0
@@ -33,6 +33,33 @@ wait_ssh () {
     COUNT=`expr $COUNT + 1`
   done
   sleep 10
+}
+
+wait_dhclient () {
+  COUNT=0
+  checkBATMAN=`/usr/sbin/batctl if | grep -v grep | wc -l`
+  if [ $checkBATMAN = 2 ]; then
+      echo "BATMAN is running."
+  else
+      echo "BATMAN is Bad."
+      return 10
+  fi
+  while true
+  do
+    /sbin/dhclient -4 br0
+    if [ $? = 0 ]; then
+      echo "dhclient is running."
+      break
+    else
+      echo "wait dhclient..."
+    fi
+    if [ $COUNT -eq $RETRY_COUNT ]; then
+      echo "dhclient RETRY OVER!"
+      return 8
+    fi
+    sleep 10
+    COUNT=`expr $COUNT + 1`
+  done
 }
 
 check_device () {
@@ -188,7 +215,10 @@ for_slave () {
     COUNT=`expr $COUNT + 1`
   done
   # Success Connection
-  /sbin/dhclient -4 br0
+  wait_dhclient
+  if [ $? -gt 0 ]; then
+    return 1
+  fi
   /sbin/brctl addif br0 eth0
   return 0
 }
@@ -212,8 +242,15 @@ bootup () {
     for_slave
   fi
   if [ $? -gt 0 ]; then
-    echo heartbeat | tee /sys/class/leds/led0/trigger
-    sleep 600
+    # led0 is green
+    # led1 is red
+    /bin/echo "Failure in constructing a mesh network."
+    /bin/echo "Restart RDBOX after 10 minutes."
+    echo none | tee /sys/class/leds/led0/trigger
+    echo none | tee /sys/class/leds/led1/trigger
+    echo 255 > /sys/class/leds/led0/brightness
+    echo 0 > /sys/class/leds/led1/brightness
+    sleep 1200
     reboot
   fi
 }

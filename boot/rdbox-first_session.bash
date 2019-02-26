@@ -7,7 +7,7 @@ hname=`/bin/hostname`
 
 echo $$ > /var/lib/rdbox/.completed_first_session
 
-/bin/bash /opt/rdbox/boot/rdbox-first_session_sub.bash >> /var/log/rdbox_first_session.log 2>&1
+/bin/bash /opt/rdbox/boot/rdbox-first_session_sub.bash >> /var/log/rdbox/rdbox_first_session.log 2>&1
 
 if [[ $hname =~ $regex_master ]]; then
   echo "master" > /var/lib/rdbox/.completed_first_session
