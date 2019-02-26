@@ -109,10 +109,11 @@ Please note that data persistence is not guaranteed.
 
 ###### Disable temporary cache registry.
 If you do not need this function, please disable the function.
-    ```bash
-    $ rdbox_cli disable temporary_cache_registry
-    :
-    [omit]
-    :
-    [rdbox_cli] Success completed.
-    ```
+
+```bash
+$ rdbox_cli disable temporary_cache_registry
+:
+[omit]
+:
+[rdbox_cli] Success completed.
+```
