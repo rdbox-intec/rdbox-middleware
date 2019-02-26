@@ -1,0 +1,96 @@
+---
+sudo: required
+dist: trusty
+
+language: python
+python: "2.7"
+
+env:
+  - ANSIBLE_VERSION=latest
+  - ANSIBLE_VERSION=2.7.6
+  - ANSIBLE_VERSION=2.7.5
+  - ANSIBLE_VERSION=2.7.4
+  - ANSIBLE_VERSION=2.7.3
+  - ANSIBLE_VERSION=2.7.2
+  - ANSIBLE_VERSION=2.7.1
+  - ANSIBLE_VERSION=2.7.0
+  - ANSIBLE_VERSION=2.6.12
+  - ANSIBLE_VERSION=2.6.11
+  - ANSIBLE_VERSION=2.6.10
+  - ANSIBLE_VERSION=2.6.9
+  - ANSIBLE_VERSION=2.6.8
+  - ANSIBLE_VERSION=2.6.7
+  - ANSIBLE_VERSION=2.6.6
+  - ANSIBLE_VERSION=2.6.5
+  - ANSIBLE_VERSION=2.6.4
+  - ANSIBLE_VERSION=2.6.3
+  - ANSIBLE_VERSION=2.6.2
+  - ANSIBLE_VERSION=2.6.1
+  - ANSIBLE_VERSION=2.6.0
+  - ANSIBLE_VERSION=2.5.14
+  - ANSIBLE_VERSION=2.5.13
+  - ANSIBLE_VERSION=2.5.12
+  - ANSIBLE_VERSION=2.5.11
+  - ANSIBLE_VERSION=2.5.10
+  - ANSIBLE_VERSION=2.5.9
+  - ANSIBLE_VERSION=2.5.8
+  - ANSIBLE_VERSION=2.5.7
+  - ANSIBLE_VERSION=2.5.6
+  - ANSIBLE_VERSION=2.5.5
+  - ANSIBLE_VERSION=2.5.4
+  - ANSIBLE_VERSION=2.5.3
+  - ANSIBLE_VERSION=2.5.2
+  - ANSIBLE_VERSION=2.5.1
+  - ANSIBLE_VERSION=2.5.0
+
+branches:
+  only:
+    - master
+
+before_install:
+  - sudo apt-get update -qq
+
+  # Remove ca-certificates
+  - sudo apt-get remove --purge --yes ca-certificates
+
+  # Generate ca key and certificate
+  - openssl genrsa -out files/ca-oefenweb-nl.key 2048;
+  - >
+    openssl req \
+      -subj '/C=NL/ST=NH/L=Amsterdam/O=Oefenweb.nl B.V./OU=Systeembeheer/CN=oefenweb.nl/emailAddress=root@oefenweb.nl/' \
+      -x509 -new -nodes \
+      -key files/ca-oefenweb-nl.key \
+      -days 1 \
+      -out files/ca-oefenweb-nl.crt \
+    ;
+
+install:
+  # Install Ansible.
+  - if [ "$ANSIBLE_VERSION" = "latest" ]; then pip install ansible; else pip install ansible==$ANSIBLE_VERSION; fi
+  - if [ "$ANSIBLE_VERSION" = "latest" ]; then pip install ansible-lint; fi
+
+script:
+  # Check the role/playbook's syntax.
+  - ansible-playbook -i tests/inventory tests/test.yml --syntax-check
+
+  # Run the role/playbook with ansible-playbook.
+  - ansible-playbook -i tests/inventory tests/test.yml -vvvv
+
+  # Run the role/playbook again, checking to make sure it's idempotent.
+  - >
+    ansible-playbook -i tests/inventory tests/test.yml
+    | grep -q 'changed=0.*failed=0'
+    && (echo 'Idempotence test: pass' && exit 0)
+    || (echo 'Idempotence test: fail' && exit 1)
+
+  - if [ "$ANSIBLE_VERSION" = "latest" ]; then ansible-lint tests/test.yml; fi
+
+notifications:
+  email: false
+  hipchat:
+    rooms:
+      secure: iaja/8Vwt/5H40o47PbPvX1VWMlsjvJQIzkYz3HpVrcqQhf8ttjHr+IOm0SZfho82jCg8gzMID1oHGpUk7mhFxv7pCZiWUacIMsfdWrYkAaHc6wv2gWojPTEI82tRqG7qbCHIQo4gpR2eMqnO6iqUvEUXeGvPjVCRGbzjCPGm4n0/qOn0DGBOCoJEpH0y+R4lorkC5AUwXIzAIIhaEVLQidCInthWilTRrNlIwZu2JDAauYhiIFC/l8AqtuXYX01TCkbhMqZBk6xSfvfeg+Ey76V/34YCUr/zu7xrGsR3swn9siNEPAXYVEt2DbzsZa18FAffczd4G7E2Uo/eeBUiLay61PllP2pdUH7T+YIVSp6WiSHGQR/gpjSFMvS5O7Q2RNcwUfgt8QNlKe1qa9G3tiYxucS5raBmgz+Cx3v/ttDTzoOHusfa/ZemSn7kyqB/QXp/SnX42gNVkJ0WrmGfg2QOfvx0vF+XHJ6Gg6a49tWZJd4+COSj+cpGojxmXZGjoRimT7ezgnEfnsvMRXjd/aHuMFSJbUqnvMoDKymP5TgwVlrYqbSaSq52rAvMSUy6X87M3a/nqTBwXNGFW5567EsiZjwOHPjm2SdnjqGfHFN6z3bidC96emw2BV1/knJxVjyeYwvaEyZQnfdEMPgc+kN5LjWEUO3lLtx5uF1NKo=
+  webhooks: https://galaxy.ansible.com/api/v1/notifications/
+  slack:
+    rooms:
+      secure: "Qni7D2jFXODmAyUWJiBbP6wJuOwmMmdud+uB6KoFZ8aP5YRtAC9TL1kmWUfGZcg+kUlzyRzazGXCSLSG+V7ajqflAGdOjqeLCG9yigbdKUg88FOBtMVSwtflFTHkQt9XUO4cek/DXR6ujBAkXqN1r6laJ9ipY8AJanbi/1VvKvPCBdLaUFbM7pVeHfEl7qWsNOu8w2D4pGPKmBVQeDXxXf4O5RyCqcBVQ8h5YRLhK1e+N/2TrUHKLOT8hc3gTYE+TDQraiSvNSYWWvR8ZGV4jKB1L0Ua+sxEosQ1O7mtSAhUlpnrKtY5hqe54RUHtviC+JmDWkQxTtC4CS8Vixqy9LVGJALUbkQzZNYm+wFi/ampQMK18A3qtFf/so+MZ5RHBOuHWMc4xDNl8rx/McK1jdLCZIvZ7JSkmAINQ92ih/ekzrPoe5fT5XNDMw+O6jj5Bsqk/MZi4xr4+VhLsutfkGQ+zguLvFIqGXu0cKbmJvByaqV3dc5110I0w+4NZF0kfae+RLEFjKkqwLT7homIvSPRv9E0KmOAHOoSbekZXRGIo3kfHNzek8GenkogLjMdpTX814KWJXv4WKkwDAdbTm7JIyR9JIDmoxg0HlYqaGiU+WHeBnEhzgXCGmKDwb9OF5CLGurj2KOl4HOQHAtg+NNZZDttR5n1fxpLq5ftfKk="
