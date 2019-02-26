@@ -90,6 +90,8 @@ elif [[ $hname =~ $regex_slave ]]; then
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
   sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
+  apt update
+  apt upgrade
 elif [[ $hname =~ $regex_vpnbridge ]]; then
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
