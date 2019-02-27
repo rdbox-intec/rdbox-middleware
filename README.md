@@ -10,10 +10,12 @@ Switch the role of Raspberry Pi based on the configuration file.
 ### Network management
 Controls the boot order of hostapd (access point) and wpa_supplicant (client).
 ### command line interface for RDBOX
-Please refer to `Introduce rdbox_cli`.
+Please refer to `rdbox_cli`.
 
-#### Introduce rdbox_cli
-##### About rdbox_cli
+---
+
+## rdbox_cli
+### About rdbox_cli
 `rdbox_cli` is a command line interface for RDBOX. You can execute various operations and get information of RDBOX. For example, you can get a list of nodes, IP address, etc. in an optimal format for RDBOX.
    ```bash
    $ rdbox_cli get node -f ansible
@@ -29,7 +31,7 @@ Please refer to `Introduce rdbox_cli`.
    ```
 In this document, we run the initial process for using rdbox_cli and some of the commands.
 
-###### Setup (only run for the first time)
+#### Setup (only run for the first time)
 1. Ensure that login RDBOX(Master) by ssh.
    ```bash
    $ ssh ubuntu@rdbox-master-00
@@ -57,8 +59,8 @@ In this document, we run the initial process for using rdbox_cli and some of the
    ```
 
 
-###### Examples
-###### Get node list in ansible Inventry file format
+#### Examples
+#### Get node list in ansible Inventry file format
 1 . Execute command `rdbox_cli get node -f ansible`.
    ```bash
    $ rdbox_cli get node -f ansible
@@ -73,7 +75,7 @@ In this document, we run the initial process for using rdbox_cli and some of the
    rdbox-k8s-worker-cloud-02  ansible_host=192.168.179.115  ansible_python_interpreter=/usr/bin/python3
    ```
 
-###### Enable temporary cache registry.
+#### Enable temporary cache registry.
 As an example, in RDBOX we will describe a method for activating temporary container cache registry. We provide a transparent cache service that is transparent to users in RDBOX network.
 You can get the following effects.
 * The effect that each node can reduce the traffic volume than downloading a container image from the Docker Hub via the Internet.
@@ -107,7 +109,7 @@ Please note that data persistence is not guaranteed.
    ```
 1. Thereafter, when pulling the same image, the temporary container cache registry is used preferentially. When deploying images to a large number of robots, we can efficiently distribute images. By pre-caching the image.
 
-###### Disable temporary cache registry.
+#### Disable temporary cache registry.
 If you do not need this function, please disable the function.
 
 ```bash
@@ -117,3 +119,7 @@ $ rdbox_cli disable temporary_cache_registry
 :
 [rdbox_cli] Success completed.
 ```
+
+## License
+
+MIT - see the [LICENSE](./LICENSE) file for details.
