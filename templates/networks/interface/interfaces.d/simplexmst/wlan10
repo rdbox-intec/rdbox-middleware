@@ -1,0 +1,4 @@
+auto wlan10
+allow-hotplug wlan10
+iface wlan10 inet manual
+  post-up iw dev wlan10 interface add awlan0 type __ap

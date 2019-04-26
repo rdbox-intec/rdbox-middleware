@@ -1,0 +1,3 @@
+auto bat0
+allow-hotplug bat0
+iface bat0 inet manual
