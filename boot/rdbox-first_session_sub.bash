@@ -3,6 +3,8 @@
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
+regex_simplexmst='^.*simplexmst.*'
+regex_simplexslv='^.*simplexslv.*'
 hname=`/bin/hostname`
 
 # Pickup the hostname changes
@@ -111,6 +113,74 @@ elif [[ $hname =~ $regex_vpnbridge ]]; then
   /bin/systemctl restart softether-vpnbridge.service
   apt update
   apt upgrade
+elif [[ $hname =~ $regex_simplexmst ]]; then
+  mv -n /etc/network/interfaces /etc/network/interfaces.org
+  ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
+  cp -n /etc/rdbox/network/interfaces.d/simplexmst/* /etc/rdbox/network/interfaces.d/current
+  macaddr="00:60:2F$(dd bs=1 count=3 if=/dev/random 2>/dev/null |hexdump -v -e '/1 ":%02X"')"
+  echo "  ip link set dev awlan0 address $macaddr" >> /etc/rdbox/network/interfaces.d/current/wlan10
+  /bin/systemctl stop sshd.service
+  /bin/systemctl stop networking.service
+  /bin/systemctl start networking.service
+  /bin/systemctl start sshd.service
+  /bin/systemctl enable rdbox-boot.service
+  /bin/systemctl restart rdbox-boot.service
+#################################################################
+# config dnsmqsq
+echo 'no-dhcp-interface=eth0,wlan10,awlan0
+listen-address=127.0.0.1,192.168.179.1
+interface=br0
+domain=rdbox.lan
+expand-hosts
+no-hosts
+server=//192.168.179.1
+server=/rdbox.lan/192.168.179.1
+server=/179.168.192.in-addr.arpa/192.168.179.1
+local=/rdbox.lan/
+resolv-file=/etc/rdbox/dnsmasq.resolver.conf
+dhcp-leasefile=/etc/rdbox/dnsmasq.leases
+addn-hosts=/etc/rdbox/dnsmasq.hosts.conf
+addn-hosts=/etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
+dhcp-range=192.168.179.11,192.168.179.254,255.255.255.0,30d
+dhcp-option=option:router,192.168.179.1
+dhcp-option=option:dns-server,192.168.179.1
+dhcp-option=option:ntp-server,192.168.179.1
+port=53
+' > /etc/rdbox/dnsmasq.conf
+echo '192.168.179.1 rdbox-master-00 rdbox-master-00.rdbox.lan
+192.168.179.2 rdbox-k8s-master rdbox-k8s-master.rdbox.lan
+192.168.179.3 rdbox-k8s-vpn rdbox-k8s-vpn.rdbox.lan
+' > /etc/rdbox/dnsmasq.hosts.conf
+echo 'nameserver 8.8.8.8
+nameserver 8.8.4.4
+' > /etc/rdbox/dnsmasq.resolver.conf
+touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
+#################################################################
+  /bin/systemctl enable dnsmasq.service
+  /bin/systemctl restart dnsmasq.service
+  mkdir -p /usr/local/share/rdbox
+  echo "/usr/local/share/rdbox `ip route | grep br0 | awk '{print $1}'`(rw,sync,no_subtree_check,no_root_squash,no_all_squash)" >> /etc/exports
+  /bin/systemctl enable nfs-kernel-server.service
+  /bin/systemctl start nfs-kernel-server.service
+  http_proxy_size=`wc -c /etc/transproxy/http_proxy | awk '{print $1}'`
+  no_proxy_size=`wc -c /etc/transproxy/no_proxy | awk '{print $1}'`
+  if [ $http_proxy_size -gt 12 ]; then
+    /bin/systemctl enable transproxy.service
+    /bin/systemctl restart transproxy.service
+  else
+    /bin/systemctl disable transproxy.service
+    /bin/systemctl stop transproxy.service
+  fi
+  /sbin/ip addr del `ip -f inet -o addr show eth0|cut -d\  -f 7 | cut -d/ -f 1`/24 dev eth0
+  /bin/systemctl enable softether-vpnbridge.service
+  /bin/systemctl restart softether-vpnbridge.service
+  sleep 30
+  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
+  /bin/systemctl restart softether-vpnbridge.service
+  apt update
+  apt upgrade
+  snap install helm --classic
+elif [[ $hname =~ $regex_simplexslv ]]; then
 else
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces

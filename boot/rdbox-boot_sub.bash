@@ -7,9 +7,9 @@ WPA_AUTH_TIMEOUT=30
 HOSTAPD_TIMEOUT=30
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
+regex_simplexmst='^.*simplexmst.*'
+regex_simplexslv='^.*simplexslv.*'
 hname=`/bin/hostname`
-USER=roboticist
-PORT=12810
 RETRY_COUNT=5
 WPA_LOG=/var/log/rdbox/rdbox_boot_wpa.log
 HOSTAPD_LOG=/var/log/rdbox/rdbox_boot_hostapd.log
@@ -119,7 +119,7 @@ watch_wifi () {
 connect_wifi_with_timeout () {
   # wpa #######################
   current_time=$(date +%s)
-  /sbin/wpa_supplicant -B -f $WPA_LOG -P /var/run/wpa_supplicant.wlan0.pid -i wlan0 -D nl80211 -c /etc/rdbox/wpa_supplicant_be.conf
+  /sbin/wpa_supplicant -B -f $WPA_LOG -P /var/run/wpa_supplicant.pid -i wlan0 -D nl80211 -c /etc/rdbox/wpa_supplicant_be.conf
   rtn=1
   { watch_wifi $current_time; rtn=$?; kill -s INT `ps -e -o pid,cmd | grep /usr/bin/tail | grep -v /usr/bin/timeout | grep $WPA_LOG | grep -v grep | awk '{ print $1 }'`; } < <(/usr/bin/timeout --signal=HUP `expr $WPA_AUTH_TIMEOUT + 10`s /usr/bin/tail -n 0 --follow=name --retry $WPA_LOG) 
   if [ $rtn -eq 0 ]; then

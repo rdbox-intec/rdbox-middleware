@@ -3,6 +3,8 @@
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
+regex_simplexmst='^.*simplexmst.*'
+regex_simplexslv='^.*simplexslv.*'
 hname=`/bin/hostname`
 
 echo $$ > /var/lib/rdbox/.completed_first_session
@@ -15,6 +17,10 @@ elif [[ $hname =~ $regex_slave ]]; then
   echo "slave" > /var/lib/rdbox/.completed_first_session
 elif [[ $hname =~ $regex_vpnbridge ]]; then
   echo "vpnbridge" > /var/lib/rdbox/.completed_first_session
+elif [[ $hname =~ $regex_simplexmst ]]; then
+  echo "simplexmst" > /var/lib/rdbox/.completed_first_session
+elif [[ $hname =~ $regex_simplexslv ]]; then
+  echo "simplexslv" > /var/lib/rdbox/.completed_first_session
 else
   echo "other" > /var/lib/rdbox/.completed_first_session
 fi

@@ -5,9 +5,11 @@ export LANG=C
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
+regex_simplexmst='^.*simplexmst.*'
+regex_simplexslv='^.*simplexslv.*'
 regex_other='^.*other.*'
 hname=`/bin/hostname`
-PIDFILE_SUPLICANT=/var/run/wpa_supplicant.wlan0.pid
+PIDFILE_SUPLICANT=/var/run/wpa_supplicant.pid
 PIDFILE_HOSTAPD=/var/run/hostapd.pid
 BOOT_LOG=/var/log/rdbox/rdbox_boot.log
 
@@ -49,7 +51,7 @@ start () {
 		  echo "OK!!"
 		fi
 	else
-                all_status_reg="$regex_master|$regex_slave|$regex_vpnbridge|$regex_other"
+                all_status_reg="$regex_master|$regex_slave|$regex_vpnbridge|$regex_other|$regex_simplexmst|$regex_simplexslv"
 		if [[ $first_session_status =~ $all_status_reg ]]; then
 			echo "Finished First Session."
 		else
