@@ -44,6 +44,34 @@ check_device () {
   return 0
 }
 
+#--------------------------------------
+
+for_master () {
+  COUNT=0
+  while true; do
+    pkill -INT -f hostapd
+    pkill -INT -f wpa_supplicant
+    sleep 10
+    # hostapd #######################
+    startup_hostapd_with_timeout
+    if [ $? -eq 0 ]; then
+      # wpa_supplicant ##############
+      sleep 10
+      connect_wifi_with_timeout
+      if [ $? -eq 0 ]; then
+        break
+      fi
+      sleep 10
+    fi
+    if [ $COUNT -eq $RETRY_COUNT ]; then
+      echo "Master Process RETRY OVER!"
+      return 1
+    fi
+    COUNT=`expr $COUNT + 1`
+  done
+  return 0
+}
+
 bootup() {
   /bin/echo `date` > $HOSTAPD_LOG
   /bin/echo `date` > $WPA_LOG
