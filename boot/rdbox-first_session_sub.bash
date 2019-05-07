@@ -127,7 +127,7 @@ elif [[ $hname =~ $regex_simplexmst ]]; then
   /bin/systemctl restart rdbox-boot.service
 #################################################################
 # config dnsmqsq
-echo 'no-dhcp-interface=eth0,wlan10,awlan0
+echo 'no-dhcp-interface=eth0,wlan10,awlan0,wlan1
 listen-address=127.0.0.1,192.168.179.1
 interface=br0
 domain=rdbox.lan
@@ -181,6 +181,23 @@ touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
   apt upgrade
   snap install helm --classic
 elif [[ $hname =~ $regex_simplexslv ]]; then
+  mv -n /etc/network/interfaces /etc/network/interfaces.org
+  ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
+  cp -n /etc/rdbox/network/interfaces.d/simplexslv/* /etc/rdbox/network/interfaces.d/current
+  /sbin/ifconfig wlan10 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
+  sed -i "/^#bssid_blacklist$/c bssid_blacklist=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
+  /bin/systemctl stop sshd.service
+  /bin/systemctl stop networking.service
+  /bin/systemctl start networking.service
+  /bin/systemctl start sshd.service
+  /bin/systemctl enable rdbox-boot.service
+  /bin/systemctl restart rdbox-boot.service
+  /sbin/dhclient br0
+  /bin/systemctl disable systemd-networkd-wait-online.service
+  /bin/systemctl mask systemd-networkd-wait-online.service
+  sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
+  apt update
+  apt upgrade
 else
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces

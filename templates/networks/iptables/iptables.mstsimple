@@ -14,6 +14,7 @@ iptables -A OUTPUT -o lo -j ACCEPT
 ###########
 #mesh wifi
 ###########
+iptables -A INPUT -i wlan1 -j ACCEPT
 iptables -A INPUT -i wlan10 -j ACCEPT
 iptables -A FORWARD --match physdev --physdev-in awlan0 --physdev-is-bridged --physdev-out eth0 -j ACCEPT
 iptables -A FORWARD --match physdev --physdev-in eth0 --physdev-is-bridged --physdev-out awlan0 -j ACCEPT

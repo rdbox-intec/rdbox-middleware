@@ -1,0 +1,6 @@
+auto wlan10
+allow-hotplug wlan10
+iface wlan10 inet manual
+  post-up iw dev wlan10 interface add awlan0 type __ap
+  post-up /sbin/ifconfig wlan10 mtu 1532
+  post-up /usr/sbin/batctl if add wlan10

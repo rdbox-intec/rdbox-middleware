@@ -9,6 +9,7 @@ regex_master='^.*master.*'
 regex_slave='^.*slave.*'
 regex_simplexmst='^.*simplexmst.*'
 regex_simplexslv='^.*simplexslv.*'
+is_simple_mesh=false
 hname=`/bin/hostname`
 RETRY_COUNT=5
 WPA_LOG=/var/log/rdbox/rdbox_boot_wpa.log
@@ -62,7 +63,7 @@ wait_dhclient () {
   done
 }
 
-check_device () {
+check_device_full () {
   ifconfig eth0 > /dev/null 2>&1
   if [ $? -ne 0 ]; then
     echo "Device named 'eth0' not found."
@@ -96,6 +97,28 @@ check_device () {
   return 0
 }
 
+check_device_simple () {
+  ifconfig eth0 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Device named 'eth0' not found."
+    return 8
+  fi
+  iwconfig wlan10 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Device named 'wlan10' not found."
+    return 8
+  fi
+  iwconfig wlan1 > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Device named 'wlan1' not found."
+    $is_simple_mesh=false
+  else
+    echo "Enable simple mesh"
+    $is_simple_mesh=true
+  fi
+  return 0
+}
+
 watch_wifi () {
   current_time=$1
   while read -t ${WPA_AUTH_TIMEOUT} line; do
@@ -113,22 +136,6 @@ watch_wifi () {
   done
   echo "  read Timeout."
   return 2
-}
-
-
-connect_wifi_with_timeout () {
-  # wpa #######################
-  current_time=$(date +%s)
-  /sbin/wpa_supplicant -B -f $WPA_LOG -P /var/run/wpa_supplicant.pid -i wlan0 -D nl80211 -c /etc/rdbox/wpa_supplicant_be.conf
-  rtn=1
-  { watch_wifi $current_time; rtn=$?; kill -s INT `ps -e -o pid,cmd | grep /usr/bin/tail | grep -v /usr/bin/timeout | grep $WPA_LOG | grep -v grep | awk '{ print $1 }'`; } < <(/usr/bin/timeout --signal=HUP `expr $WPA_AUTH_TIMEOUT + 10`s /usr/bin/tail -n 0 --follow=name --retry $WPA_LOG) 
-  if [ $rtn -eq 0 ]; then
-    return 0
-  else
-    echo 'WPA authentication failed.'
-    pkill -INT -f wpa_supplicant
-    return 5
-  fi
 }
 
 watch_hostapd () {
@@ -150,10 +157,25 @@ watch_hostapd () {
   return 2
 }
 
+connect_wifi_with_timeout () {
+  # wpa #######################
+  current_time=$(date +%s)
+  /sbin/wpa_supplicant -B -f $WPA_LOG -P /var/run/wpa_supplicant.pid -D nl80211 $@
+  rtn=1
+  { watch_wifi $current_time; rtn=$?; kill -s INT `ps -e -o pid,cmd | grep /usr/bin/tail | grep -v /usr/bin/timeout | grep $WPA_LOG | grep -v grep | awk '{ print $1 }'`; } < <(/usr/bin/timeout --signal=HUP `expr $WPA_AUTH_TIMEOUT + 10`s /usr/bin/tail -n 0 --follow=name --retry $WPA_LOG) 
+  if [ $rtn -eq 0 ]; then
+    return 0
+  else
+    echo 'WPA authentication failed.'
+    pkill -INT -f wpa_supplicant
+    return 5
+  fi
+}
+
 startup_hostapd_with_timeout () {
   # hostapd #######################
   current_time=$(date +%s)
-  /usr/sbin/hostapd -B -f $HOSTAPD_LOG -P /var/run/hostapd.pid /etc/rdbox/hostapd_be.conf /etc/rdbox/hostapd_ap_an.conf /etc/rdbox/hostapd_ap_bg.conf
+  /usr/sbin/hostapd -B -f $HOSTAPD_LOG -P /var/run/hostapd.pid $@
   rtn=1
   { watch_hostapd $current_time; rtn=$?; kill -s INT `ps -e -o pid,cmd | grep /usr/bin/tail | grep -v /usr/bin/timeout | grep $HOSTAPD_LOG | grep -v grep | awk '{ print $1 }'`; } < <(exec /usr/bin/timeout --signal=HUP `expr $HOSTAPD_TIMEOUT + 10`s /usr/bin/tail -n 0 --follow=name --retry $HOSTAPD_LOG)
   if [ $rtn -eq 0 ]; then
@@ -167,16 +189,21 @@ startup_hostapd_with_timeout () {
 
 for_master () {
   COUNT=0
+  check_device_full
+  if [ $? -gt 0 ]; then
+    /bin/echo "Do not check device!"
+    return 2
+  fi
   while true; do
     pkill -INT -f hostapd
     pkill -INT -f wpa_supplicant
     sleep 10
     # hostapd #######################
-    startup_hostapd_with_timeout
+    startup_hostapd_with_timeout /etc/rdbox/hostapd_be.conf /etc/rdbox/hostapd_ap_an.conf /etc/rdbox/hostapd_ap_bg.conf
     if [ $? -eq 0 ]; then
       # wpa_supplicant ##############
       sleep 10
-      connect_wifi_with_timeout
+      connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_be.conf
       if [ $? -eq 0 ]; then
         break
       fi
@@ -193,16 +220,93 @@ for_master () {
 
 for_slave () {
   COUNT=0
+  check_device_full
+  if [ $? -gt 0 ]; then
+    /bin/echo "Do not check device!"
+    return 2
+  fi
   while true; do
     pkill -INT -f hostapd
     pkill -INT -f wpa_supplicant
     sleep 10
     # wpa_supplicant ##############
-    connect_wifi_with_timeout
+    connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_be.conf
     if [ $? -eq 0 ]; then
       # hostapd #######################
       sleep 10
-      startup_hostapd_with_timeout
+      startup_hostapd_with_timeout /etc/rdbox/hostapd_be.conf /etc/rdbox/hostapd_ap_an.conf /etc/rdbox/hostapd_ap_bg.conf
+      if [ $? -eq 0 ]; then
+        break
+      fi
+      sleep 10
+    fi
+    if [ $COUNT -eq $RETRY_COUNT ]; then
+        echo "Slave Process RETRY OVER!"
+        return 1
+    fi
+    COUNT=`expr $COUNT + 1`
+  done
+  # Success Connection
+  wait_dhclient
+  if [ $? -gt 0 ]; then
+    return 1
+  fi
+  /sbin/brctl addif br0 eth0
+  return 0
+}
+
+for_simplexmst () {
+  COUNT=0
+  check_device_simple
+  if [ $? -gt 0 ]; then
+    /bin/echo "Do not check device!"
+    return 2
+  fi
+  while true; do
+    pkill -INT -f hostapd
+    pkill -INT -f wpa_supplicant
+    sleep 10
+    # hostapd #######################
+    if $is_simple_mesh; then
+      startup_hostapd_with_timeout /etc/rdbox/hostapd_simple_ap.conf /etc/rdbox/hostapd_simple_be.conf
+    else
+      startup_hostapd_with_timeout /etc/rdbox/hostapd_simple_ap.conf
+    fi
+    if [ $? -eq 0 ]; then
+      # wpa_supplicant ##############
+      sleep 10
+      connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf
+      if [ $? -eq 0 ]; then
+        break
+      fi
+      sleep 10
+    fi
+    if [ $COUNT -eq $RETRY_COUNT ]; then
+      echo "Master Process RETRY OVER!"
+      return 1
+    fi
+    COUNT=`expr $COUNT + 1`
+  done
+  return 0
+}
+
+for_simplexslv () {
+  COUNT=0
+  check_device_simple
+  if [ $? -gt 0 ]; then
+    /bin/echo "Do not check device!"
+    return 2
+  fi
+  while true; do
+    pkill -INT -f hostapd
+    pkill -INT -f wpa_supplicant
+    sleep 10
+    # wpa_supplicant ##############
+    connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_be.conf
+    if [ $? -eq 0 ]; then
+      # hostapd #######################
+      sleep 10
+      startup_hostapd_with_timeout /etc/rdbox/hostapd_simple_ap.conf /etc/rdbox/hostapd_simple_be.conf
       if [ $? -eq 0 ]; then
         break
       fi
@@ -231,15 +335,14 @@ bootup () {
     /bin/echo "Do not work sshd!"
     exit 1
   fi
-  check_device
-  if [ $? -gt 0 ]; then
-    /bin/echo "Do not check device!"
-    exit 2
-  fi
   if [[ $hname =~ $regex_master ]]; then
     for_master
   elif [[ $hname =~ $regex_slave ]]; then
     for_slave
+  elif [[ $hname =~ $regex_simplexmst ]]; then
+    for_simplexmst
+  elif [[ $hname =~ $regex_simplexslv ]]; then
+    for_simplexslv
   fi
   if [ $? -gt 0 ]; then
     # led0 is green
