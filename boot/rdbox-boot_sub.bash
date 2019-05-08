@@ -63,6 +63,26 @@ wait_dhclient () {
   done
 }
 
+wait_dhclient_simplexmst () {
+  COUNT=0
+  while true
+  do
+    /sbin/dhclient -4 wlan10
+    if [ $? = 0 ]; then
+      echo "dhclient is running."
+      break
+    else
+      echo "wait dhclient..."
+    fi
+    if [ $COUNT -eq $RETRY_COUNT ]; then
+      echo "dhclient RETRY OVER!"
+      return 8
+    fi
+    sleep 10
+    COUNT=`expr $COUNT + 1`
+  done
+}
+
 check_device_full () {
   ifconfig eth0 > /dev/null 2>&1
   if [ $? -ne 0 ]; then
@@ -287,6 +307,12 @@ for_simplexmst () {
     fi
     COUNT=`expr $COUNT + 1`
   done
+  # Success Connection
+  wait_dhclient_simplexmst
+  if [ $? -gt 0 ]; then
+    return 1
+  fi
+  /sbin/brctl addif br0 eth0
   return 0
 }
 

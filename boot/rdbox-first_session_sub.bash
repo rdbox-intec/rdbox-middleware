@@ -118,7 +118,12 @@ elif [[ $hname =~ $regex_simplexmst ]]; then
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/simplexmst/* /etc/rdbox/network/interfaces.d/current
   macaddr="00:60:2F$(dd bs=1 count=3 if=/dev/random 2>/dev/null |hexdump -v -e '/1 ":%02X"')"
-  echo "  ip link set dev awlan0 address $macaddr" >> /etc/rdbox/network/interfaces.d/current/wlan10
+  echo "  post-up ip link set dev awlan0 address $macaddr" >> /etc/rdbox/network/interfaces.d/current/wlan10
+  ip link set dev awlan0 address $macaddr
+  echo "auto awlan0
+allow-hotplug awlan0
+iface awlan0 inet manual" > /etc/rdbox/network/interfaces.d/current/awlan0
+  /sbin/ifup awlan0
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
@@ -186,6 +191,13 @@ elif [[ $hname =~ $regex_simplexslv ]]; then
   cp -n /etc/rdbox/network/interfaces.d/simplexslv/* /etc/rdbox/network/interfaces.d/current
   /sbin/ifconfig wlan10 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
   sed -i "/^#bssid_blacklist$/c bssid_blacklist=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
+  macaddr="00:60:2F$(dd bs=1 count=3 if=/dev/random 2>/dev/null |hexdump -v -e '/1 ":%02X"')"
+  echo "  post-up ip link set dev awlan0 address $macaddr" >> /etc/rdbox/network/interfaces.d/current/wlan10
+  ip link set dev awlan0 address $macaddr
+  echo "auto awlan0
+allow-hotplug awlan0
+iface awlan0 inet manual" > /etc/rdbox/network/interfaces.d/current/awlan0
+  /sbin/ifup awlan0
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
