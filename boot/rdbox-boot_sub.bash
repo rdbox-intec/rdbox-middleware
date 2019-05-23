@@ -14,6 +14,8 @@ hname=`/bin/hostname`
 RETRY_COUNT=5
 WPA_LOG=/var/log/rdbox/rdbox_boot_wpa.log
 HOSTAPD_LOG=/var/log/rdbox/rdbox_boot_hostapd.log
+PIDFILE_SUPLICANT=/var/run/wpa_supplicant.pid
+PIDFILE_HOSTAPD=/var/run/hostapd.pid
 
 wait_ssh () {
   COUNT=0
@@ -48,26 +50,6 @@ wait_dhclient () {
   while true
   do
     /sbin/dhclient -4 br0
-    if [ $? = 0 ]; then
-      echo "dhclient is running."
-      break
-    else
-      echo "wait dhclient..."
-    fi
-    if [ $COUNT -eq $RETRY_COUNT ]; then
-      echo "dhclient RETRY OVER!"
-      return 8
-    fi
-    sleep 10
-    COUNT=`expr $COUNT + 1`
-  done
-}
-
-wait_dhclient_simplexmst () {
-  COUNT=0
-  while true
-  do
-    /sbin/dhclient -4 wlan10
     if [ $? = 0 ]; then
       echo "dhclient is running."
       break
@@ -128,13 +110,13 @@ check_device_simple () {
     echo "Device named 'wlan10' not found."
     return 8
   fi
-  iwconfig wlan1 > /dev/null 2>&1
+  iwconfig wlan0 > /dev/null 2>&1
   if [ $? -ne 0 ]; then
-    echo "Device named 'wlan1' not found."
-    $is_simple_mesh=false
+    echo "Device named 'wlan0' not found."
+    is_simple_mesh=false
   else
     echo "Enable simple mesh"
-    $is_simple_mesh=true
+    is_simple_mesh=true
   fi
   return 0
 }
@@ -162,7 +144,7 @@ watch_hostapd () {
   current_time=$1
   while read -t ${HOSTAPD_TIMEOUT} line; do
     echo "  $line"
-    echo $line | grep -wq 'wlan1: AP-ENABLED'
+    echo $line | grep -wq 'AP-ENABLED'
     if [ $? -eq 0 ]; then
       echo "  hostapd OK!!"
       return 0
@@ -180,7 +162,7 @@ watch_hostapd () {
 connect_wifi_with_timeout () {
   # wpa #######################
   current_time=$(date +%s)
-  /sbin/wpa_supplicant -B -f $WPA_LOG -P /var/run/wpa_supplicant.pid -D nl80211 $@
+  /sbin/wpa_supplicant -B -f $WPA_LOG -P $PIDFILE_SUPLICANT -D nl80211 $@
   rtn=1
   { watch_wifi $current_time; rtn=$?; kill -s INT `ps -e -o pid,cmd | grep /usr/bin/tail | grep -v /usr/bin/timeout | grep $WPA_LOG | grep -v grep | awk '{ print $1 }'`; } < <(/usr/bin/timeout --signal=HUP `expr $WPA_AUTH_TIMEOUT + 10`s /usr/bin/tail -n 0 --follow=name --retry $WPA_LOG) 
   if [ $rtn -eq 0 ]; then
@@ -195,7 +177,7 @@ connect_wifi_with_timeout () {
 startup_hostapd_with_timeout () {
   # hostapd #######################
   current_time=$(date +%s)
-  /usr/sbin/hostapd -B -f $HOSTAPD_LOG -P /var/run/hostapd.pid $@
+  /usr/sbin/hostapd -B -f $HOSTAPD_LOG -P $PIDFILE_HOSTAPD $@
   rtn=1
   { watch_hostapd $current_time; rtn=$?; kill -s INT `ps -e -o pid,cmd | grep /usr/bin/tail | grep -v /usr/bin/timeout | grep $HOSTAPD_LOG | grep -v grep | awk '{ print $1 }'`; } < <(exec /usr/bin/timeout --signal=HUP `expr $HOSTAPD_TIMEOUT + 10`s /usr/bin/tail -n 0 --follow=name --retry $HOSTAPD_LOG)
   if [ $rtn -eq 0 ]; then
@@ -276,6 +258,10 @@ for_slave () {
 }
 
 for_simplexmst () {
+  REGISTERD_WIFI_DEV=`grep -o 'SUBSYSTEM' /etc/udev/rules.d/70-persistent-net.rules | wc -l`
+  if [ $REGISTERD_WIFI_DEV -eq 2 ]; then
+    /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
+  fi
   COUNT=0
   check_device_simple
   if [ $? -gt 0 ]; then
@@ -293,13 +279,7 @@ for_simplexmst () {
       startup_hostapd_with_timeout /etc/rdbox/hostapd_simple_ap.conf
     fi
     if [ $? -eq 0 ]; then
-      # wpa_supplicant ##############
-      sleep 10
-      connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf
-      if [ $? -eq 0 ]; then
-        break
-      fi
-      sleep 10
+      break
     fi
     if [ $COUNT -eq $RETRY_COUNT ]; then
       echo "Master Process RETRY OVER!"
@@ -308,15 +288,15 @@ for_simplexmst () {
     COUNT=`expr $COUNT + 1`
   done
   # Success Connection
-  wait_dhclient_simplexmst
-  if [ $? -gt 0 ]; then
-    return 1
-  fi
-  /sbin/brctl addif br0 eth0
+  /sbin/brctl addif br0 tap_tap0
   return 0
 }
 
 for_simplexslv () {
+  REGISTERD_WIFI_DEV=`grep -o 'SUBSYSTEM' /etc/udev/rules.d/70-persistent-net.rules | wc -l`
+  if [ $REGISTERD_WIFI_DEV -eq 2 ]; then
+    /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
+  fi
   COUNT=0
   check_device_simple
   if [ $? -gt 0 ]; then

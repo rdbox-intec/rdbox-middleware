@@ -1,3 +1,5 @@
 #!/bin/bash
+export LC_ALL=C
+export LANG=C
 
 nohup /bin/bash /opt/rdbox/boot/sub_to_run_kubeadm_join_after_communicating_with.bash "$@" > /var/log/rdbox/rdbox_kubeadm_join.log 2>&1 &

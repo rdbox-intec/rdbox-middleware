@@ -17,11 +17,8 @@ install/rdbox::
 	install -pm 644 templates/networks/hostapd/hostapd_ap_an.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_be.conf $(DEB_DESTDIR)etc/rdbox
-	install -pm 644 templates/networks/hostapd/hostapd_simple_be.conf $(DEB_DESTDIR)etc/rdbox
-	install -pm 644 templates/networks/hostapd/hostapd_simple_ap.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_be.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
-	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_yoursite.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/iptables/iptables $(DEB_DESTDIR)etc/rdbox/network
 	install -pm 644 templates/networks/iptables/iptables.mstsimple $(DEB_DESTDIR)etc/rdbox/network
 	install -pm 644 templates/networks/interface/interfaces $(DEB_DESTDIR)etc/rdbox/network
@@ -50,17 +47,18 @@ install/rdbox::
 	install -pm 644 templates/networks/interface/interfaces.d/others/eth0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others/eth0
 	install -pm 644 templates/networks/interface/interfaces.d/others/lo $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others/lo
 	install -pm 644 templates/networks/interface/interfaces.d/others/wlan10 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others/wlan10
+	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/awlan0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/awlan0
 	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/bat0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/bat0
 	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/br0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/br0
 	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/eth0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/eth0
 	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/lo $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/lo
-	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/wlan1 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/wlan1
 	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/wlan10 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/wlan10
+	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/awlan0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/awlan0
+	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/awlan1 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/awlan1
 	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/bat0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/bat0
 	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/br0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/br0
 	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/eth0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/eth0
 	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/lo $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/lo
-	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/wlan1 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/wlan1
 	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/wlan10 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/wlan10
 	
 	install -pd $(DEB_DESTDIR)opt/rdbox/boot

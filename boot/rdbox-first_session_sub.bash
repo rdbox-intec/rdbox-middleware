@@ -1,4 +1,6 @@
 #!/bin/bash
+export LC_ALL=C
+export LANG=C
 
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
@@ -61,6 +63,7 @@ touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
   /bin/systemctl restart dnsmasq.service
   mkdir -p /usr/local/share/rdbox
   echo "/usr/local/share/rdbox `ip route | grep br0 | awk '{print $1}'`(rw,sync,no_subtree_check,no_root_squash,no_all_squash)" >> /etc/exports
+  exportfs -ra
   /bin/systemctl enable nfs-kernel-server.service
   /bin/systemctl start nfs-kernel-server.service
   http_proxy_size=`wc -c /etc/transproxy/http_proxy | awk '{print $1}'`
@@ -72,8 +75,6 @@ touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
     /bin/systemctl disable transproxy.service
     /bin/systemctl stop transproxy.service
   fi
-  apt update
-  apt upgrade
   snap install helm --classic
 elif [[ $hname =~ $regex_slave ]]; then
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
@@ -92,8 +93,6 @@ elif [[ $hname =~ $regex_slave ]]; then
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
   sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
-  apt update
-  apt upgrade
 elif [[ $hname =~ $regex_vpnbridge ]]; then
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
@@ -111,28 +110,29 @@ elif [[ $hname =~ $regex_vpnbridge ]]; then
   sleep 30
   /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
   /bin/systemctl restart softether-vpnbridge.service
-  apt update
-  apt upgrade
 elif [[ $hname =~ $regex_simplexmst ]]; then
+  /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/simplexmst/* /etc/rdbox/network/interfaces.d/current
-  macaddr="00:60:2F$(dd bs=1 count=3 if=/dev/random 2>/dev/null |hexdump -v -e '/1 ":%02X"')"
-  echo "  post-up ip link set dev awlan0 address $macaddr" >> /etc/rdbox/network/interfaces.d/current/wlan10
-  ip link set dev awlan0 address $macaddr
-  echo "auto awlan0
-allow-hotplug awlan0
-iface awlan0 inet manual" > /etc/rdbox/network/interfaces.d/current/awlan0
-  /sbin/ifup awlan0
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
+  /usr/bin/touch /etc/rdbox/hostapd_be.deny
+  sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^interface\=/c\interface\=awlan0' /etc/rdbox/hostapd_be.conf
+  sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_be.conf
+  sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
+  sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
 #################################################################
 # config dnsmqsq
-echo 'no-dhcp-interface=eth0,wlan10,awlan0,wlan1
+echo 'no-dhcp-interface=eth0,wlan10
 listen-address=127.0.0.1,192.168.179.1
 interface=br0
 domain=rdbox.lan
@@ -165,6 +165,7 @@ touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
   /bin/systemctl restart dnsmasq.service
   mkdir -p /usr/local/share/rdbox
   echo "/usr/local/share/rdbox `ip route | grep br0 | awk '{print $1}'`(rw,sync,no_subtree_check,no_root_squash,no_all_squash)" >> /etc/exports
+  exportfs -ra
   /bin/systemctl enable nfs-kernel-server.service
   /bin/systemctl start nfs-kernel-server.service
   http_proxy_size=`wc -c /etc/transproxy/http_proxy | awk '{print $1}'`
@@ -176,28 +177,28 @@ touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
     /bin/systemctl disable transproxy.service
     /bin/systemctl stop transproxy.service
   fi
-  /sbin/ip addr del `ip -f inet -o addr show eth0|cut -d\  -f 7 | cut -d/ -f 1`/24 dev eth0
   /bin/systemctl enable softether-vpnbridge.service
   /bin/systemctl restart softether-vpnbridge.service
   sleep 30
+  sed -i -e '/BridgeCreate BRIDGE/c\BridgeCreate BRIDGE /DEVICE:br0 /TAP:yes' /usr/local/etc/vpnbridge.in
   /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
   /bin/systemctl restart softether-vpnbridge.service
-  apt update
-  apt upgrade
   snap install helm --classic
 elif [[ $hname =~ $regex_simplexslv ]]; then
+  /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/simplexslv/* /etc/rdbox/network/interfaces.d/current
   /sbin/ifconfig wlan10 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
-  sed -i "/^#bssid_blacklist$/c bssid_blacklist=`/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
-  macaddr="00:60:2F$(dd bs=1 count=3 if=/dev/random 2>/dev/null |hexdump -v -e '/1 ":%02X"')"
-  echo "  post-up ip link set dev awlan0 address $macaddr" >> /etc/rdbox/network/interfaces.d/current/wlan10
-  ip link set dev awlan0 address $macaddr
-  echo "auto awlan0
-allow-hotplug awlan0
-iface awlan0 inet manual" > /etc/rdbox/network/interfaces.d/current/awlan0
-  /sbin/ifup awlan0
+  sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^interface\=/c\interface\=awlan0' /etc/rdbox/hostapd_be.conf
+  sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_be.conf
+  sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
+  sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
+  sed -i "/^#bssid_blacklist$/c bssid_blacklist=`/sbin/ifconfig awlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
@@ -208,8 +209,6 @@ iface awlan0 inet manual" > /etc/rdbox/network/interfaces.d/current/awlan0
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
   sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
-  apt update
-  apt upgrade
 else
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
@@ -221,8 +220,6 @@ else
   /bin/systemctl start sshd.service
   /sbin/ifup wlan10
   /sbin/dhclient wlan10 
-  apt update
-  apt upgrade
 fi
 
 if [ -e '/boot/id_rsa' ]; then

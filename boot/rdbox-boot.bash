@@ -81,7 +81,6 @@ start () {
 	return 0
 }
 
-
 stop () {
 	hups `cat $PIDFILE_SUPLICANT 2>/dev/null`
 	hups `cat $PIDFILE_HOSTAPD 2>/dev/null`

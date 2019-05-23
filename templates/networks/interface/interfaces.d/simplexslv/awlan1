@@ -1,0 +1,4 @@
+auto awlan1
+allow-hotplug awlan1
+iface awlan1 inet manual
+  pre-up iw dev wlan0 interface add awlan1 type __ap

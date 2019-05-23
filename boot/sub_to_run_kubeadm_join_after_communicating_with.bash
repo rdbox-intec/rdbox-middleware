@@ -1,4 +1,6 @@
 #!/bin/bash
+export LC_ALL=C
+export LANG=C
 
 LIMIT_PING_COUNT=21600 # about 12h(6h*2)
 SUCCESS_THRESHOLD=15

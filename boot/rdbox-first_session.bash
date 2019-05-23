@@ -1,4 +1,6 @@
 #!/bin/bash
+export LC_ALL=C
+export LANG=C
 
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
