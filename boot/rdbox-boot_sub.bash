@@ -274,9 +274,9 @@ for_simplexmst () {
     sleep 10
     # hostapd #######################
     if $is_simple_mesh; then
-      startup_hostapd_with_timeout /etc/rdbox/hostapd_simple_ap.conf /etc/rdbox/hostapd_simple_be.conf
+      startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf
     else
-      startup_hostapd_with_timeout /etc/rdbox/hostapd_simple_ap.conf
+      startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
     fi
     if [ $? -eq 0 ]; then
       break
@@ -312,7 +312,7 @@ for_simplexslv () {
     if [ $? -eq 0 ]; then
       # hostapd #######################
       sleep 10
-      startup_hostapd_with_timeout /etc/rdbox/hostapd_simple_ap.conf /etc/rdbox/hostapd_simple_be.conf
+      startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf
       if [ $? -eq 0 ]; then
         break
       fi
