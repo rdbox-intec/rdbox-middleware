@@ -119,17 +119,6 @@ elif [[ $hname =~ $regex_simplexmst ]]; then
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
-  /usr/bin/touch /etc/rdbox/hostapd_be.deny
-  sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
-  sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_ap_bg.conf
-  sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_ap_bg.conf
-  sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_ap_bg.conf
-  sed -i -e '/^interface\=/c\interface\=awlan0' /etc/rdbox/hostapd_be.conf
-  sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_be.conf
-  sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
-  sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
-  /bin/systemctl enable rdbox-boot.service
-  /bin/systemctl restart rdbox-boot.service
 #################################################################
 # config dnsmqsq
 echo 'no-dhcp-interface=eth0,wlan10
@@ -183,6 +172,17 @@ touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
   sed -i -e '/BridgeCreate BRIDGE/c\BridgeCreate BRIDGE /DEVICE:br0 /TAP:yes' /usr/local/etc/vpnbridge.in
   /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
   /bin/systemctl restart softether-vpnbridge.service
+  /usr/bin/touch /etc/rdbox/hostapd_be.deny
+  sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^interface\=/c\interface\=awlan0' /etc/rdbox/hostapd_be.conf
+  sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_be.conf
+  sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
+  sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
+  /bin/systemctl enable rdbox-boot.service
+  /bin/systemctl restart rdbox-boot.service
   snap install helm --classic
 elif [[ $hname =~ $regex_simplexslv ]]; then
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py

@@ -35,15 +35,15 @@ def main():
         diff = mac_set_before.symmetric_difference(mac_set)
         current_mac_addr = diff.pop()
         mac_dict.update({i: current_mac_addr})
-        #--------
         mac_set_before = set(mac_all)
     rules = ""
-    for index,addr in mac_dict.items():
+    for index, addr in mac_dict.items():
         rule = 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="%s", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="wlan%s"' % (addr, index - 1)
         rules = rules + rule + '\n'
-    append_cmd = "echo '%s' >> /etc/udev/rules.d/70-persistent-net.rules" % rules
-    print append_cmd
-    subprocess.call(append_cmd, shell=True)
+    if rules != "":
+        append_cmd = "echo '%s' >> /etc/udev/rules.d/70-persistent-net.rules" % rules
+        print append_cmd
+        subprocess.call(append_cmd, shell=True)
     for i, row in enumerate(datas):
         i = i + 1
         if len(datas) == 4:

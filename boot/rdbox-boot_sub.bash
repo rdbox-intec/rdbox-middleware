@@ -288,6 +288,7 @@ for_simplexmst () {
     COUNT=`expr $COUNT + 1`
   done
   # Success Connection
+  cp $PIDFILE_HOSTAPD $PIDFILE_SUPLICANT
   /sbin/brctl addif br0 tap_tap0
   return 0
 }
