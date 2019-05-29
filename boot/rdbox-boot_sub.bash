@@ -65,6 +65,27 @@ wait_dhclient () {
   done
 }
 
+wait_tap_device () {
+  COUNT=0
+  while true
+  do
+    ifconfig tap_tap0 > /dev/null 2>&1
+    if [ $? = 0 ]; then
+      echo "tap_tap0 is already up."
+      break
+    else
+      echo "wait tap_tap0..."
+    fi
+    if [ $COUNT -eq $RETRY_COUNT ]; then
+      echo "Device named 'tap_tap0' not found."
+      return 8
+    fi
+    sleep 10
+    COUNT=`expr $COUNT + 1`
+  done
+  return 0
+}
+
 check_device_full () {
   ifconfig eth0 > /dev/null 2>&1
   if [ $? -ne 0 ]; then
@@ -289,7 +310,12 @@ for_simplexmst () {
   done
   # Success Connection
   cp $PIDFILE_HOSTAPD $PIDFILE_SUPLICANT
-  /sbin/brctl addif br0 tap_tap0
+  wait_tap_device
+  if [ $? -eq 0 ]; then
+    /sbin/brctl addif br0 tap_br0
+  else
+    return 1
+  fi
   return 0
 }
 

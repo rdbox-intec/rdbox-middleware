@@ -2,6 +2,8 @@
 export LC_ALL=C
 export LANG=C
 
+echo "`date` The first session process is start."
+
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
@@ -254,5 +256,6 @@ sed -i "/HypriotOS/a \
            RDBOX  \n \
 - A Robotics Developers BOX - " /etc/motd
 
+echo "`date` The first session process is complete."
 
 exit 0
