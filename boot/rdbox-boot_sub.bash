@@ -69,15 +69,15 @@ wait_tap_device () {
   COUNT=0
   while true
   do
-    ifconfig tap_tap0 > /dev/null 2>&1
+    ifconfig tap_br0 > /dev/null 2>&1
     if [ $? = 0 ]; then
-      echo "tap_tap0 is already up."
+      echo "tap_br0 is already up."
       break
     else
-      echo "wait tap_tap0..."
+      echo "wait tap_br0..."
     fi
     if [ $COUNT -eq $RETRY_COUNT ]; then
-      echo "Device named 'tap_tap0' not found."
+      echo "Device named 'tap_br0' not found."
       return 8
     fi
     sleep 10
