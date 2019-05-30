@@ -39,6 +39,7 @@ wait_ssh () {
 }
 
 wait_dhclient () {
+  sleep 10
   COUNT=0
   checkBATMAN=`/usr/sbin/batctl if | grep -v grep | wc -l`
   if [ $checkBATMAN = 2 ]; then
@@ -49,8 +50,8 @@ wait_dhclient () {
   fi
   while true
   do
-    /sbin/dhclient -4 br0
-    if [ $? = 0 ]; then
+    /sbin/dhclient -1 br0
+    if [ $? -eq 0 ]; then
       echo "dhclient is running."
       break
     else
@@ -138,6 +139,10 @@ check_device_simple () {
   else
     echo "Enable simple mesh"
     is_simple_mesh=true
+    ifup awlan0
+    if [[ $hname =~ $regex_simplexslv ]]; then
+      ifup awlan1
+    fi
   fi
   return 0
 }
@@ -185,7 +190,7 @@ connect_wifi_with_timeout () {
   current_time=$(date +%s)
   /sbin/wpa_supplicant -B -f $WPA_LOG -P $PIDFILE_SUPLICANT -D nl80211 $@
   rtn=1
-  { watch_wifi $current_time; rtn=$?; kill -s INT `ps -e -o pid,cmd | grep /usr/bin/tail | grep -v /usr/bin/timeout | grep $WPA_LOG | grep -v grep | awk '{ print $1 }'`; } < <(/usr/bin/timeout --signal=HUP `expr $WPA_AUTH_TIMEOUT + 10`s /usr/bin/tail -n 0 --follow=name --retry $WPA_LOG) 
+  { watch_wifi $current_time; rtn=$?; kill -s INT `ps -e -o pid,cmd | grep /usr/bin/tail | grep -v /usr/bin/timeout | grep $WPA_LOG | grep -v grep | awk '{ print $1 }'`; } < <(/usr/bin/timeout --signal=HUP `expr $WPA_AUTH_TIMEOUT + 10`s /usr/bin/tail --follow=name --retry $WPA_LOG) 
   if [ $rtn -eq 0 ]; then
     return 0
   else
@@ -200,7 +205,7 @@ startup_hostapd_with_timeout () {
   current_time=$(date +%s)
   /usr/sbin/hostapd -B -f $HOSTAPD_LOG -P $PIDFILE_HOSTAPD $@
   rtn=1
-  { watch_hostapd $current_time; rtn=$?; kill -s INT `ps -e -o pid,cmd | grep /usr/bin/tail | grep -v /usr/bin/timeout | grep $HOSTAPD_LOG | grep -v grep | awk '{ print $1 }'`; } < <(exec /usr/bin/timeout --signal=HUP `expr $HOSTAPD_TIMEOUT + 10`s /usr/bin/tail -n 0 --follow=name --retry $HOSTAPD_LOG)
+  { watch_hostapd $current_time; rtn=$?; kill -s INT `ps -e -o pid,cmd | grep /usr/bin/tail | grep -v /usr/bin/timeout | grep $HOSTAPD_LOG | grep -v grep | awk '{ print $1 }'`; } < <(/usr/bin/timeout --signal=HUP `expr $HOSTAPD_TIMEOUT + 10`s /usr/bin/tail --follow=name --retry $HOSTAPD_LOG)
   if [ $rtn -eq 0 ]; then
     return 0
   else
@@ -286,7 +291,7 @@ for_simplexmst () {
   COUNT=0
   check_device_simple
   if [ $? -gt 0 ]; then
-    /bin/echo "Do not check device!"
+    /bin/echo "Do not found device!"
     return 2
   fi
   while true; do
@@ -327,7 +332,7 @@ for_simplexslv () {
   COUNT=0
   check_device_simple
   if [ $? -gt 0 ]; then
-    /bin/echo "Do not check device!"
+    /bin/echo "Do not found device!"
     return 2
   fi
   while true; do

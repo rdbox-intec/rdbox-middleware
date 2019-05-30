@@ -51,7 +51,7 @@ start () {
 		  source /etc/rdbox/network/iptables.mstsimple > $BOOT_LOG 2>&1
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
 		elif [[ $hname =~ $regex_simplexslv ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		else
 		  echo "OK!!"
 		fi
@@ -73,7 +73,7 @@ start () {
 		  source /etc/rdbox/network/iptables.mstsimple > $BOOT_LOG 2>&1
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
 		elif [[ $hname =~ $regex_simplexslv ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		else
 		  echo "OK!!"
 		fi

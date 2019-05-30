@@ -10,6 +10,7 @@ regex_vpnbridge='^.*vpnbridge.*'
 regex_simplexmst='^.*simplexmst.*'
 regex_simplexslv='^.*simplexslv.*'
 hname=`/bin/hostname`
+fname=`/bin/hostname -f`
 
 # Pickup the hostname changes
 /bin/systemctl restart avahi-daemon
@@ -35,13 +36,13 @@ if [[ $hname =~ $regex_master ]]; then
 echo 'no-dhcp-interface=eth0,wlan0,wlan1,wlan2,wlan3
 listen-address=127.0.0.1,192.168.179.1
 interface=br0
-domain=rdbox.lan
+domain=$fname
 expand-hosts
 no-hosts
 server=//192.168.179.1
-server=/rdbox.lan/192.168.179.1
+server=/$fname/192.168.179.1
 server=/179.168.192.in-addr.arpa/192.168.179.1
-local=/rdbox.lan/
+local=/$fname/
 resolv-file=/etc/rdbox/dnsmasq.resolver.conf
 dhcp-leasefile=/etc/rdbox/dnsmasq.leases
 addn-hosts=/etc/rdbox/dnsmasq.hosts.conf
@@ -52,9 +53,9 @@ dhcp-option=option:dns-server,192.168.179.1
 dhcp-option=option:ntp-server,192.168.179.1
 port=53
 ' > /etc/rdbox/dnsmasq.conf
-echo '192.168.179.1 rdbox-master-00 rdbox-master-00.rdbox.lan
-192.168.179.2 rdbox-k8s-master rdbox-k8s-master.rdbox.lan
-192.168.179.3 rdbox-k8s-vpn rdbox-k8s-vpn.rdbox.lan
+echo '192.168.179.1 $hname $hname.$fname
+192.168.179.2 rdbox-k8s-master rdbox-k8s-master.$fname
+192.168.179.3 rdbox-k8s-vpn rdbox-k8s-vpn.$fname
 ' > /etc/rdbox/dnsmasq.hosts.conf
 echo 'nameserver 8.8.8.8
 nameserver 8.8.4.4
@@ -126,13 +127,13 @@ elif [[ $hname =~ $regex_simplexmst ]]; then
 echo 'no-dhcp-interface=eth0,wlan10
 listen-address=127.0.0.1,192.168.179.1
 interface=br0
-domain=rdbox.lan
+domain=$fname
 expand-hosts
 no-hosts
 server=//192.168.179.1
-server=/rdbox.lan/192.168.179.1
+server=/$fname/192.168.179.1
 server=/179.168.192.in-addr.arpa/192.168.179.1
-local=/rdbox.lan/
+local=/$fname/
 resolv-file=/etc/rdbox/dnsmasq.resolver.conf
 dhcp-leasefile=/etc/rdbox/dnsmasq.leases
 addn-hosts=/etc/rdbox/dnsmasq.hosts.conf
@@ -143,9 +144,9 @@ dhcp-option=option:dns-server,192.168.179.1
 dhcp-option=option:ntp-server,192.168.179.1
 port=53
 ' > /etc/rdbox/dnsmasq.conf
-echo '192.168.179.1 rdbox-master-00 rdbox-master-00.rdbox.lan
-192.168.179.2 rdbox-k8s-master rdbox-k8s-master.rdbox.lan
-192.168.179.3 rdbox-k8s-vpn rdbox-k8s-vpn.rdbox.lan
+echo '192.168.179.1 $hname $hname.$fname
+192.168.179.2 rdbox-k8s-master rdbox-k8s-master.$fname
+192.168.179.3 rdbox-k8s-vpn rdbox-k8s-vpn.$fname
 ' > /etc/rdbox/dnsmasq.hosts.conf
 echo 'nameserver 8.8.8.8
 nameserver 8.8.4.4
@@ -200,11 +201,11 @@ elif [[ $hname =~ $regex_simplexslv ]]; then
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
-  sed -i "/^#bssid_blacklist$/c bssid_blacklist=`/sbin/ifconfig awlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
+  sed -i "/^#bssid_blacklist$/c bssid_blacklist=`/sbin/ifconfig awlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}'`" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
   /sbin/dhclient br0
