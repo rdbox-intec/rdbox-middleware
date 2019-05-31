@@ -16,6 +16,28 @@ WPA_LOG=/var/log/rdbox/rdbox_boot_wpa.log
 HOSTAPD_LOG=/var/log/rdbox/rdbox_boot_hostapd.log
 PIDFILE_SUPLICANT=/var/run/wpa_supplicant.pid
 PIDFILE_HOSTAPD=/var/run/hostapd.pid
+is_simple=`cat /var/lib/rdbox/.is_simple`
+if [ $? -ne 0 ]; then
+  is_simple=false
+fi
+rdbox_type="other"
+if [[ $hname =~ $regex_master ]]; then
+  if "${is_simple}"; then
+    rdbox_type="simplexmst"
+  else
+    rdbox_type="master"
+  fi
+elif [[ $hname =~ $regex_slave ]]; then
+  if "${is_simple}"; then
+    rdbox_type="simplexslv"
+  else
+    rdbox_type="slave"
+  fi
+elif [[ $hname =~ $regex_vpnbridge ]]; then
+  rdbox_type="vpnbridge"
+else
+  rdbox_type="other"
+fi
 
 wait_ssh () {
   COUNT=0
@@ -140,7 +162,7 @@ check_device_simple () {
     echo "Enable simple mesh"
     is_simple_mesh=true
     ifup awlan0
-    if [[ $hname =~ $regex_simplexslv ]]; then
+    if [[ $rdbox_type =~ $regex_simplexslv ]]; then
       ifup awlan1
     fi
   fi
@@ -373,13 +395,13 @@ bootup () {
     /bin/echo "Do not work sshd!"
     exit 1
   fi
-  if [[ $hname =~ $regex_master ]]; then
+  if [[ $rdbox_type =~ $regex_master ]]; then
     for_master
-  elif [[ $hname =~ $regex_slave ]]; then
+  elif [[ $rdbox_type =~ $regex_slave ]]; then
     for_slave
-  elif [[ $hname =~ $regex_simplexmst ]]; then
+  elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
     for_simplexmst
-  elif [[ $hname =~ $regex_simplexslv ]]; then
+  elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
     for_simplexslv
   fi
   if [ $? -gt 0 ]; then
