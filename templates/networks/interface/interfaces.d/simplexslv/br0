@@ -1,0 +1,4 @@
+auto br0
+allow-hotplug br0
+iface br0 inet dhcp
+  bridge_ports bat0
