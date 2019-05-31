@@ -12,12 +12,15 @@ install/rdbox::
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/slave
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/vpnbridge
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others
+	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst
+	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv
 	install -pm 644 templates/networks/hostapd/hostapd_ap_an.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/hostapd/hostapd_be.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_be.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
 	install -pm 644 templates/networks/iptables/iptables $(DEB_DESTDIR)etc/rdbox/network
+	install -pm 644 templates/networks/iptables/iptables.mstsimple $(DEB_DESTDIR)etc/rdbox/network
 	install -pm 644 templates/networks/interface/interfaces $(DEB_DESTDIR)etc/rdbox/network
 	install -pm 644 templates/networks/interface/interfaces.d/master/bat0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/bat0
 	install -pm 644 templates/networks/interface/interfaces.d/master/br0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/br0
@@ -44,6 +47,19 @@ install/rdbox::
 	install -pm 644 templates/networks/interface/interfaces.d/others/eth0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others/eth0
 	install -pm 644 templates/networks/interface/interfaces.d/others/lo $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others/lo
 	install -pm 644 templates/networks/interface/interfaces.d/others/wlan10 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others/wlan10
+	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/awlan0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/awlan0
+	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/bat0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/bat0
+	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/br0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/br0
+	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/eth0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/eth0
+	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/lo $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/lo
+	install -pm 644 templates/networks/interface/interfaces.d/simplexmst/wlan10 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst/wlan10
+	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/awlan0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/awlan0
+	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/awlan1 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/awlan1
+	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/bat0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/bat0
+	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/br0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/br0
+	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/eth0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/eth0
+	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/lo $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/lo
+	install -pm 644 templates/networks/interface/interfaces.d/simplexslv/wlan10 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv/wlan10
 	
 	install -pd $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/rdbox-bind_unbind_dongles.py $(DEB_DESTDIR)opt/rdbox/boot
@@ -53,6 +69,8 @@ install/rdbox::
 	install -pm 755 boot/rdbox-first_session_sub.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/to_run_kubeadm_join_after_communicating_with $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/sub_to_run_kubeadm_join_after_communicating_with.bash $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/util_for_ip_addresses.bash $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 644 boot/.is_simple $(DEB_DESTDIR)var/lib/rdbox
 	# rdbox
 	install -pd $(DEB_DESTDIR)opt/rdbox/bin
 	install -pd $(DEB_DESTDIR)usr/bin

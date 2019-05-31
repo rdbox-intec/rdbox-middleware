@@ -1,7 +1,7 @@
 Source: rdbox
 Section: devel
 Priority: optional
-Maintainer: INTEC Inc. <info-rdbo@intec.co.jp>
+Maintainer: INTEC Inc. <info-rdbox@intec.co.jp>
 Build-Depends: cdbs, debhelper
 Standards-Version: 3.9.6
 

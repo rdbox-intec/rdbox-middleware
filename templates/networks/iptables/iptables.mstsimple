@@ -1,0 +1,78 @@
+##############
+#Deafult Rule
+##############
+iptables -P INPUT DROP
+iptables -P FORWARD DROP
+iptables -P OUTPUT ACCEPT
+
+#########
+#loopback
+#########
+iptables -A INPUT -i lo -j ACCEPT
+iptables -A OUTPUT -o lo -j ACCEPT
+
+###########
+#mesh wifi
+###########
+iptables -A INPUT -i wlan10 -j ACCEPT
+iptables -A INPUT -i awlan0 -j ACCEPT
+
+iptables -A FORWARD --match physdev --physdev-in wlan10 --physdev-is-bridged --physdev-out tap_tap0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in tap_tap0 --physdev-is-bridged --physdev-out wlan10 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan10 --physdev-is-bridged --physdev-out tap_br0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in tap_br0 --physdev-is-bridged --physdev-out wlan10 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan10 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out wlan10 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out tap_tap0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in tap_tap0 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out tap_br0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in tap_br0 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
+
+
+iptables -A INPUT -p tcp ! --syn -m state --state NEW -j DROP
+iptables -A INPUT -p tcp -m state --state NEW,ESTABLISHED,RELATED --dport 80 -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 80 -j ACCEPT
+iptables -A INPUT -p tcp -m state --state NEW,ESTABLISHED,RELATED --dport 443 -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 443 -j ACCEPT
+iptables -A INPUT -p tcp -m state --state NEW,ESTABLISHED,RELATED --dport 8080 -j ACCEPT
+iptables -A OUTPUT -p tcp --sport 8080 -j ACCEPT
+iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -o eth0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+iptables -A FORWARD -p udp -i br0 -o eth0 --dport 135:139 -j DROP
+iptables -A FORWARD -p tcp -i br0 -o eth0 --dport 135:139 -j DROP
+iptables -A FORWARD -p udp -i br0 -o eth0 --dport 445 -j DROP
+iptables -A FORWARD -p tcp -i br0 -o eth0 --dport 445 -j DROP
+iptables -A OUTPUT -o eth0 -p tcp --dport 135:139 -j DROP
+iptables -A OUTPUT -o eth0 -p udp --dport 135:139 -j DROP
+iptables -A OUTPUT -o eth0 -p tcp --dport 445 -j DROP
+iptables -A OUTPUT -o eth0 -p udp --dport 445 -j DROP
+iptables -A INPUT -i br0 -j ACCEPT
+iptables -A FORWARD -i eth0 -o br0 -m state --state RELATED,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i br0 -o eth0 -j ACCEPT
+iptables -A INPUT -i docker0 -j ACCEPT
+iptables -A OUTPUT -o docker0 -j ACCEPT
+iptables -A FORWARD -i docker0 -j ACCEPT
+iptables -A FORWARD -o docker0 -j ACCEPT
+iptables -A INPUT -i cni0 -j ACCEPT
+iptables -A OUTPUT -o cni0 -j ACCEPT
+iptables -A FORWARD -i cni0 -j ACCEPT
+iptables -A FORWARD -o cni0 -j ACCEPT
+
+#################
+#SNAT(masquerade)
+#################
+iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
+
+###########
+#VPNBridge
+###########
+iptables -A INPUT -i tap_tap0 -j ACCEPT
+
+#########
+#logging
+#########
+iptables -N LOGGING
+iptables -A LOGGING -j LOG --log-level warning --log-prefix "DROP:" -m limit
+iptables -A LOGGING -j DROP
+iptables -A INPUT -j LOGGING
+iptables -A FORWARD -j LOGGING
