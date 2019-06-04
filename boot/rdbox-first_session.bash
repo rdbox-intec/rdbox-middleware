@@ -33,6 +33,31 @@ fi
 
 echo $$ > /var/lib/rdbox/.completed_first_session
 
+if [ ! -e "/etc/rdbox/hostapd_ap_an.conf" ];then
+  echo "/etc/rdbox/hostapd_ap_an.conf File not exists."
+  cp -rf /etc/rdbox/hostapd_ap_an.conf.sample /etc/rdbox/hostapd_ap_an.conf
+fi
+if [ ! -e "/etc/rdbox/hostapd_ap_bg.conf" ];then
+  echo "/etc/rdbox/hostapd_ap_bg.conf File not exists."
+  cp -rf /etc/rdbox/hostapd_ap_bg.conf.sample /etc/rdbox/hostapd_ap_bg.conf
+fi
+if [ ! -e "/etc/rdbox/hostapd_be.conf" ];then
+  echo "/etc/rdbox/hostapd_be.conf File not exists."
+  cp -rf /etc/rdbox/hostapd_be.conf.sample /etc/rdbox/hostapd_be.conf
+fi
+if [ ! -e "/etc/rdbox/wpa_supplicant_be.conf" ];then
+  echo "wpa_supplicant_be.conf File not exists."
+  cp -rf /etc/rdbox/wpa_supplicant_be.conf.sapmle /etc/rdbox/wpa_supplicant_be.conf
+fi
+if [ ! -e "/etc/rdbox/wpa_supplicant_ap_bg.conf" ];then
+  echo "wpa_supplicant_ap_bg.conf File not exists."
+  cp -rf /etc/rdbox/wpa_supplicant_ap_bg.conf.sapmle /etc/rdbox/wpa_supplicant_ap_bg.conf
+fi
+if [ ! -e "/etc/rdbox/rdbox_cli.conf" ];then
+  echo "/etc/rdbox/rdbox_cli.conf File not exists."
+  cp -rf /etc/rdbox/rdbox_cli.conf.sample /etc/rdbox/rdbox_cli.conf
+fi
+
 /bin/bash /opt/rdbox/boot/rdbox-first_session_sub.bash >> /var/log/rdbox/rdbox_first_session.log 2>&1
 
 if [[ $rdbox_type =~ $regex_master ]]; then

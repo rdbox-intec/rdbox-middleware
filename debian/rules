@@ -14,11 +14,11 @@ install/rdbox::
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/others
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexmst
 	install -pd $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/simplexslv
-	install -pm 644 templates/networks/hostapd/hostapd_ap_an.conf $(DEB_DESTDIR)etc/rdbox
-	install -pm 644 templates/networks/hostapd/hostapd_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
-	install -pm 644 templates/networks/hostapd/hostapd_be.conf $(DEB_DESTDIR)etc/rdbox
-	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_be.conf $(DEB_DESTDIR)etc/rdbox
-	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_ap_bg.conf $(DEB_DESTDIR)etc/rdbox
+	install -pm 644 templates/networks/hostapd/hostapd_ap_an.conf $(DEB_DESTDIR)etc/rdbox/hostapd_ap_an.conf.sample
+	install -pm 644 templates/networks/hostapd/hostapd_ap_bg.conf $(DEB_DESTDIR)etc/rdbox/hostapd_ap_bg.conf.sample
+	install -pm 644 templates/networks/hostapd/hostapd_be.conf $(DEB_DESTDIR)etc/rdbox/hostapd_be.conf.sample
+	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_be.conf $(DEB_DESTDIR)etc/rdbox/wpa_supplicant_be.conf.sapmle
+	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_ap_bg.conf $(DEB_DESTDIR)etc/rdbox/wpa_supplicant_ap_bg.conf.sample
 	install -pm 644 templates/networks/iptables/iptables $(DEB_DESTDIR)etc/rdbox/network
 	install -pm 644 templates/networks/iptables/iptables.mstsimple $(DEB_DESTDIR)etc/rdbox/network
 	install -pm 644 templates/networks/interface/interfaces $(DEB_DESTDIR)etc/rdbox/network
@@ -77,7 +77,7 @@ install/rdbox::
 	cp -rf bin/* $(DEB_DESTDIR)opt/rdbox/bin
 	chmod +x $(DEB_DESTDIR)opt/rdbox/bin/rdbox_cli
 	ln -s /opt/rdbox/bin/rdbox_cli $(DEB_DESTDIR)usr/bin
-	install -pm 644 bin/rdbox_cli.conf $(DEB_DESTDIR)etc/rdbox
+	install -pm 644 bin/rdbox_cli.conf $(DEB_DESTDIR)etc/rdbox/rdbox_cli.conf.sample
 	# ansible
 	install -pd $(DEB_DESTDIR)opt/rdbox/ansible
 	cp -rf ansible/* $(DEB_DESTDIR)opt/rdbox/ansible
