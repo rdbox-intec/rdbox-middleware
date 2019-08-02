@@ -70,7 +70,6 @@ start () {
 		elif [[ $rdbox_type =~ $regex_slave ]]; then
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
-		  source /etc/rdbox/network/iptables.mstsimple > $BOOT_LOG 2>&1
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
@@ -92,7 +91,6 @@ start () {
 		elif [[ $rdbox_type =~ $regex_slave ]]; then
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
-		  source /etc/rdbox/network/iptables.mstsimple > $BOOT_LOG 2>&1
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1

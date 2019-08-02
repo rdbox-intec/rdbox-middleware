@@ -16,6 +16,7 @@ WPA_LOG=/var/log/rdbox/rdbox_boot_wpa.log
 HOSTAPD_LOG=/var/log/rdbox/rdbox_boot_hostapd.log
 PIDFILE_SUPLICANT=/var/run/wpa_supplicant.pid
 PIDFILE_HOSTAPD=/var/run/hostapd.pid
+is_active_yoursite_wifi=false
 is_simple=`cat /var/lib/rdbox/.is_simple`
 if [ $? -ne 0 ]; then
   is_simple=false
@@ -39,6 +40,20 @@ else
   rdbox_type="other"
 fi
 
+check_active_yoursite_wifi () {
+  word_count=$(cat /etc/rdbox/wpa_supplicant_yoursite.conf | sed 's/^[ \t]*//' | grep -E "^psk=.*" | wc -c)
+  word_line=$(cat /etc/rdbox/wpa_supplicant_yoursite.conf | sed 's/^[ \t]*//' | grep -E "^psk=.*" | wc -l)
+  if [ $word_line -eq 0 ]; then
+    is_active_yoursite_wifi=false
+    return 0
+  fi
+  counter=`expr $word_count / $word_line`
+  if [ $counter -gt 12 ]; then
+    is_active_yoursite_wifi=true
+    return 0
+  fi
+}
+
 wait_ssh () {
   COUNT=0
   while true
@@ -60,9 +75,7 @@ wait_ssh () {
   sleep 10
 }
 
-wait_dhclient () {
-  sleep 10
-  COUNT=0
+check_batman () {
   checkBATMAN=`/usr/sbin/batctl if | grep -v grep | wc -l`
   if [ $checkBATMAN = 2 ]; then
       echo "BATMAN is running."
@@ -70,6 +83,12 @@ wait_dhclient () {
       echo "BATMAN is Bad."
       return 10
   fi
+  return 0
+}
+
+wait_dhclient () {
+  sleep 10
+  COUNT=0
   while true
   do
     /sbin/dhclient -1 br0
@@ -265,6 +284,13 @@ for_master () {
     fi
     COUNT=`expr $COUNT + 1`
   done
+  _ip_count=$(/sbin/ifconfig br0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
+  if [ $_ip_count -eq 0 ]; then
+    wait_dhclient
+    if [ $? -gt 0 ]; then
+      return 1
+    fi
+  fi
   return 0
 }
 
@@ -297,6 +323,10 @@ for_slave () {
     COUNT=`expr $COUNT + 1`
   done
   # Success Connection
+  check_batman
+  if [ $? -gt 0 ]; then
+    return 1
+  fi
   wait_dhclient
   if [ $? -gt 0 ]; then
     return 1
@@ -320,14 +350,38 @@ for_simplexmst () {
     pkill -INT -f hostapd
     pkill -INT -f wpa_supplicant
     sleep 10
-    # hostapd #######################
-    if $is_simple_mesh; then
-      startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf
+    # wpa_supplicant ##############
+    check_active_yoursite_wifi
+    if $is_active_yoursite_wifi; then
+      if $is_simple_mesh; then
+        iw dev wlan0 interface add awlan1 type __ap
+        ifup awlan1
+      else
+        iw dev wlan10 interface add awlan1 type __ap
+        ifconfig awlan1 hw ether b8:27:eb:33:44:55
+        ifup awlan1
+      fi
+      source /etc/rdbox/network/iptables.mstsimple.wlan10
+      connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf
+      sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
     else
-      startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
+      source /etc/rdbox/network/iptables.mstsimple
+      _ip_count=$(/sbin/ifconfig eth0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
+      if [ $_ip_count -eq 0 ]; then
+        dhclient eth0
+      fi
+      sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
     fi
     if [ $? -eq 0 ]; then
-      break
+      # hostapd #######################
+      if $is_simple_mesh; then
+        startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf
+      else
+        startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
+      fi
+      if [ $? -eq 0 ]; then
+        break
+      fi
     fi
     if [ $COUNT -eq $RETRY_COUNT ]; then
       echo "Master Process RETRY OVER!"
@@ -342,6 +396,16 @@ for_simplexmst () {
     /sbin/brctl addif br0 tap_br0
   else
     return 1
+  fi
+  if $is_active_yoursite_wifi; then
+    /sbin/brctl addif br0 eth0
+  fi
+  _ip_count=$(/sbin/ifconfig br0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
+  if [ $_ip_count -eq 0 ]; then
+    wait_dhclient
+    if [ $? -gt 0 ]; then
+      return 1
+    fi
   fi
   return 0
 }
@@ -379,6 +443,10 @@ for_simplexslv () {
     COUNT=`expr $COUNT + 1`
   done
   # Success Connection
+  check_batman
+  if [ $? -gt 0 ]; then
+    return 1
+  fi
   wait_dhclient
   if [ $? -gt 0 ]; then
     return 1

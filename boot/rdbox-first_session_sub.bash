@@ -6,6 +6,10 @@ source /opt/rdbox/boot/util_for_ip_addresses.bash
 
 echo "`date` The first session process is start."
 
+HOSTNAME_PREFIX=0
+HOSTNAME_TYPE=1
+HOSTNAME_SUFFIX=2
+
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
@@ -19,6 +23,7 @@ if [ $? -ne 0 ]; then
 fi
 rdbox_type="other"
 if [[ $hname =~ $regex_master ]]; then
+  hostname_arr=(`echo "$(hostname)" | tr -s '-' ' '`)
   if "${is_simple}"; then
     rdbox_type="simplexmst"
   else
@@ -46,7 +51,15 @@ if [[ $rdbox_type =~ $regex_master ]]; then
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
+  # INTERFACE #################################################################
   cp -n /etc/rdbox/network/interfaces.d/master/* /etc/rdbox/network/interfaces.d/current
+  if [[ ${hostname_arr[$HOSTNAME_SUFFIX]} != '00' ]]; then
+    echo "auto br0" > /etc/rdbox/network/interfaces.d/current/br0
+    echo "allow-hotplug br0" >> /etc/rdbox/network/interfaces.d/current/br0
+    echo "iface br0 inet manual" >> /etc/rdbox/network/interfaces.d/current/br0
+    echo "  bridge_ports bat0" >> /etc/rdbox/network/interfaces.d/current/br0
+  fi
+  #################################################################
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
@@ -57,6 +70,7 @@ if [[ $rdbox_type =~ $regex_master ]]; then
   /bin/systemctl restart rdbox-boot.service
 # DNS
 #################################################################
+if [[ ${hostname_arr[$HOSTNAME_SUFFIX]} == '00' ]]; then
 ip_br0_with_cidr=`ip -f inet -o addr show br0|cut -d\  -f 7 | tr -d '\n'`
 ip_br0=`ip -f inet -o addr show br0|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n'`
 cidr_no=$(cidr_prefix $ip_br0_with_cidr)
@@ -102,9 +116,11 @@ do
   echo "nameserver $line " >> /etc/rdbox/dnsmasq.resolver.conf
 done
 touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
+
+/bin/systemctl enable dnsmasq.service
+/bin/systemctl restart dnsmasq.service
+fi
 #################################################################
-  /bin/systemctl enable dnsmasq.service
-  /bin/systemctl restart dnsmasq.service
   mkdir -p /usr/local/share/rdbox
   echo "/usr/local/share/rdbox `ip route | grep br0 | awk '{print $1}'`(rw,sync,no_subtree_check,no_root_squash,no_all_squash)" >> /etc/exports
   exportfs -ra
@@ -161,22 +177,32 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
+  # INTERFACE #################################################################
   cp -n /etc/rdbox/network/interfaces.d/simplexmst/* /etc/rdbox/network/interfaces.d/current
+  if [[ ${hostname_arr[$HOSTNAME_SUFFIX]} != '00' ]]; then
+    echo "auto br0" > /etc/rdbox/network/interfaces.d/current/br0
+    echo "allow-hotplug br0" >> /etc/rdbox/network/interfaces.d/current/br0
+    echo "iface br0 inet manual" >> /etc/rdbox/network/interfaces.d/current/br0
+    echo "  bridge_ports bat0" >> /etc/rdbox/network/interfaces.d/current/br0
+  fi
+  #################################################################
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
-  ip_br0_with_cidr=`ip -f inet -o addr show br0|cut -d\  -f 7 | tr -d '\n'`
-  ip_br0=`ip -f inet -o addr show br0|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n'`
-  cidr_no=$(cidr_prefix $ip_br0_with_cidr)
-  first_addr=$(cidr_default_gw $ip_br0_with_cidr)
-  netmask_br0=$(int_to_ip4 $(netmask_of_prefix $(cidr_prefix $ip_br0_with_cidr)))
-  arpa_no=$(in-addr_arpa $ip_br0_with_cidr)
-  dhcp_min_addr=$(ipmax $ip_br0_with_cidr 25)
-  dhcp_max_addr=$(cidr_default_gw_2 $ip_br0_with_cidr)
-  k8smst_addr=$(ipmax $(cidr_default_gw $ip_br0_with_cidr) 2)
-  k8svpn_addr=$(ipmax $(cidr_default_gw $ip_br0_with_cidr) 3)
+# DNS
 #################################################################
+if [[ ${hostname_arr[$HOSTNAME_SUFFIX]} == '00' ]]; then
+ip_br0_with_cidr=`ip -f inet -o addr show br0|cut -d\  -f 7 | tr -d '\n'`
+ip_br0=`ip -f inet -o addr show br0|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n'`
+cidr_no=$(cidr_prefix $ip_br0_with_cidr)
+first_addr=$(cidr_default_gw $ip_br0_with_cidr)
+netmask_br0=$(int_to_ip4 $(netmask_of_prefix $(cidr_prefix $ip_br0_with_cidr)))
+arpa_no=$(in-addr_arpa $ip_br0_with_cidr)
+dhcp_min_addr=$(ipmax $ip_br0_with_cidr 25)
+dhcp_max_addr=$(cidr_default_gw_2 $ip_br0_with_cidr)
+k8smst_addr=$(ipmax $(cidr_default_gw $ip_br0_with_cidr) 2)
+k8svpn_addr=$(ipmax $(cidr_default_gw $ip_br0_with_cidr) 3)
 # config dnsmqsq
 echo "no-dhcp-interface=eth0,wlan10
 listen-address=127.0.0.1,${ip_br0}
@@ -212,9 +238,10 @@ do
   echo "nameserver $line " >> /etc/rdbox/dnsmasq.resolver.conf
 done
 touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
+/bin/systemctl enable dnsmasq.service
+/bin/systemctl restart dnsmasq.service
 #################################################################
-  /bin/systemctl enable dnsmasq.service
-  /bin/systemctl restart dnsmasq.service
+fi
   mkdir -p /usr/local/share/rdbox
   echo "/usr/local/share/rdbox `ip route | grep br0 | awk '{print $1}'`(rw,sync,no_subtree_check,no_root_squash,no_all_squash)" >> /etc/exports
   exportfs -ra
@@ -229,14 +256,9 @@ touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
     /bin/systemctl disable transproxy.service
     /bin/systemctl stop transproxy.service
   fi
-  /bin/systemctl enable softether-vpnbridge.service
-  /bin/systemctl restart softether-vpnbridge.service
-  sleep 30
-  sed -i -e '/BridgeCreate BRIDGE/c\BridgeCreate BRIDGE /DEVICE:br0 /TAP:yes' /usr/local/etc/vpnbridge.in
-  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
-  /bin/systemctl restart softether-vpnbridge.service
+  ## For RDBOX.
   /usr/bin/touch /etc/rdbox/hostapd_be.deny
-  sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_ap_bg.conf
@@ -246,6 +268,14 @@ touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
+  ## For VPN.
+  /bin/systemctl enable softether-vpnbridge.service
+  /bin/systemctl restart softether-vpnbridge.service
+  sleep 30
+  sed -i -e '/BridgeCreate BRIDGE/c\BridgeCreate BRIDGE /DEVICE:br0 /TAP:yes' /usr/local/etc/vpnbridge.in
+  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
+  /bin/systemctl restart softether-vpnbridge.service
+  ## install Helm.
   apt update
   snap install helm --classic
 elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
