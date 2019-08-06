@@ -359,27 +359,36 @@ for_simplexmst () {
         ifup awlan0
         iw dev wlan0 interface add awlan1 type __ap
         ifup awlan1
+        connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf
       else
         iw dev wlan10 interface add awlan1 type __ap
-        ifconfig awlan1 hw ether 52:54:00:33:44:55
+        ifconfig awlan1 hw ether b8:27:eb:8b:37:04
         ifup awlan1
+        source /etc/rdbox/network/iptables.mstsimple.wlan10
+        sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
+        sed -i -e '/^bridge\=/c\#bridge\=br0' /etc/rdbox/hostapd_ap_bg.conf
+        startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
       fi
-      source /etc/rdbox/network/iptables.mstsimple.wlan10
-      connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf
-      sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
     else
       source /etc/rdbox/network/iptables.mstsimple
       _ip_count=$(/sbin/ifconfig eth0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
       if [ $_ip_count -eq 0 ]; then
         dhclient eth0
       fi
-      sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
     fi
     if [ $? -eq 0 ]; then
       # hostapd #######################
-      if $is_simple_mesh; then
-        startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf
+      if $is_active_yoursite_wifi; then
+        if $is_simple_mesh; then
+          startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf
+        else
+          connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf
+          dhclient wlan10
+          sleep 20
+          brctl addif br0 awlan1
+        fi
       else
+        sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
         startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
       fi
       if [ $? -eq 0 ]; then

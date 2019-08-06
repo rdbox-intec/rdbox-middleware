@@ -66,11 +66,11 @@ start () {
 	if [ $? = 0 ]; then
 		if [[ $rdbox_type =~ $regex_master ]]; then
 		  source /etc/rdbox/network/iptables > $BOOT_LOG 2>&1
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_slave ]]; then
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		else
@@ -87,11 +87,11 @@ start () {
 		fi
 		if [[ $rdbox_type =~ $regex_master ]]; then
 		  source /etc/rdbox/network/iptables > $BOOT_LOG 2>&1
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_slave ]]; then
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash >> $BOOT_LOG 2>&1
+		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
 		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		else
