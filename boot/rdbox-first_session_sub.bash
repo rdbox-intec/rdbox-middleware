@@ -256,6 +256,13 @@ fi
     /bin/systemctl disable transproxy.service
     /bin/systemctl stop transproxy.service
   fi
+  ## For VPN.
+  /bin/systemctl enable softether-vpnbridge.service
+  /bin/systemctl restart softether-vpnbridge.service
+  sleep 30
+  sed -i -e '/BridgeCreate BRIDGE/c\BridgeCreate BRIDGE /DEVICE:br0 /TAP:yes' /usr/local/etc/vpnbridge.in
+  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
+  /bin/systemctl restart softether-vpnbridge.service
   ## For RDBOX.
   /usr/bin/touch /etc/rdbox/hostapd_be.deny
   sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
@@ -268,13 +275,6 @@ fi
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
-  ## For VPN.
-  /bin/systemctl enable softether-vpnbridge.service
-  /bin/systemctl restart softether-vpnbridge.service
-  sleep 30
-  sed -i -e '/BridgeCreate BRIDGE/c\BridgeCreate BRIDGE /DEVICE:br0 /TAP:yes' /usr/local/etc/vpnbridge.in
-  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
-  /bin/systemctl restart softether-vpnbridge.service
   ## install Helm.
   apt update
   snap install helm --classic

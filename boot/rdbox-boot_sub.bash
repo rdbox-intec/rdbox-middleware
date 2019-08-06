@@ -354,11 +354,14 @@ for_simplexmst () {
     check_active_yoursite_wifi
     if $is_active_yoursite_wifi; then
       if $is_simple_mesh; then
+        iw dev wlan0 interface add awlan0 type __ap
+        /usr/sbin/batctl if add awlan0
+        ifup awlan0
         iw dev wlan0 interface add awlan1 type __ap
         ifup awlan1
       else
         iw dev wlan10 interface add awlan1 type __ap
-        ifconfig awlan1 hw ether b8:27:eb:33:44:55
+        ifconfig awlan1 hw ether 52:54:00:33:44:55
         ifup awlan1
       fi
       source /etc/rdbox/network/iptables.mstsimple.wlan10
