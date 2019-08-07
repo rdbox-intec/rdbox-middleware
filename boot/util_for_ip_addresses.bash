@@ -61,7 +61,7 @@ cidr_default_gw_2 () {
   local netmask
   local broadcast
   ip=$(ip4_to_int "$(cidr_ip "$1")")
-  prefix=$(cidr_prefix $1)
+  prefix=$(cidr_prefix "$1")
   netmask=$(netmask_of_prefix "$prefix")
   broadcast=$(((4294967295 - netmask) | ip))
   int_to_ip4 $((broadcast - 1))
