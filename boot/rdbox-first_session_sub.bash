@@ -4,7 +4,7 @@ export LANG=C
 
 source /opt/rdbox/boot/util_for_ip_addresses.bash
 
-echo "`date` The first session process is start."
+echo "$(date) The first session process is start."
 
 HOSTNAME_PREFIX=0
 HOSTNAME_TYPE=1
@@ -15,15 +15,19 @@ regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
 regex_simplexmst='^.*simplexmst.*'
 regex_simplexslv='^.*simplexslv.*'
-hname=`/bin/hostname`
-fname=`/bin/hostname -f`
-is_simple=`cat /var/lib/rdbox/.is_simple`
-if [ $? -ne 0 ]; then
-  is_simple=false
-fi
+hname=$(/bin/hostname)
+fname=$(/bin/hostname -f)
 rdbox_type="other"
+is_simple=false
+
+if ! cat /var/lib/rdbox/.is_simple; then
+  is_simple=false
+else
+  is_simple=$(cat /var/lib/rdbox/.is_simple)
+fi
+
 if [[ $hname =~ $regex_master ]]; then
-  hostname_arr=(`echo "$(hostname)" | tr -s '-' ' '`)
+  hostname_arr=$(hostname | tr -s '-' ' ')
   if "${is_simple}"; then
     rdbox_type="simplexmst"
   else
@@ -319,23 +323,25 @@ else
 fi
 
 if [ -e '/boot/id_rsa' ]; then
-  for user in `ls /home`; do
-    home_dir=/home/$user
-    mkdir -p -m 700 $home_dir/.ssh
-    cp -n /boot/id_rsa $home_dir/.ssh/id_rsa
-    chmod 600 $home_dir/.ssh/id_rsa
-    chown -R $user:$user $home_dir/.ssh
+  for home_dir in /home/*; do
+    user=$(basename "$home_dir")
+    mkdir -p "$home_dir"/.ssh
+    chmod -m 700 "$home_dir"/.ssh
+    cp -n /boot/id_rsa "$home_dir"/.ssh/id_rsa
+    chmod 600 "$home_dir"/.ssh/id_rsa
+    chown -R "$user":"$user" "$home_dir"/.ssh
   done
   rm -rf /boot/id_rsa
 fi
 
 if [ -e '/boot/id_rsa.pub' ]; then
-  for user in `ls /home`; do
-    home_dir=/home/$user
-    mkdir -p -m 700 $home_dir/.ssh
-    cat /boot/id_rsa.pub >> $home_dir/.ssh/authorized_keys
-    chmod 600 $home_dir/.ssh/authorized_keys
-    chown -R $user:$user $home_dir/.ssh
+  for home_dir in /home/*; do
+    user=$(basename "$home_dir")
+    mkdir -p "$home_dir"/.ssh
+    chmod -m 700 "$home_dir"/.ssh
+    cat /boot/id_rsa.pub >> "$home_dir"/.ssh/authorized_keys
+    chmod 600 "$home_dir"/.ssh/authorized_keys
+    chown -R "$user":"$user" "$home_dir"/.ssh
   done
   rm -rf /boot/id_rsa.pub
 fi
@@ -350,6 +356,6 @@ sed -i "/HypriotOS/a \
            RDBOX  \n \
 - A Robotics Developers BOX - " /etc/motd
 
-echo "`date` The first session process is complete."
+echo "$(date) The first session process is complete."
 
 exit 0

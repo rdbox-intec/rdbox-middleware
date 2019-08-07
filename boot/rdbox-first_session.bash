@@ -7,12 +7,16 @@ regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
 regex_simplexmst='^.*simplexmst.*'
 regex_simplexslv='^.*simplexslv.*'
-hname=`/bin/hostname`
-is_simple=`cat /var/lib/rdbox/.is_simple`
-if [ $? -ne 0 ]; then
-  is_simple=false
-fi
+hname=$(/bin/hostname)
+is_simple=false
 rdbox_type="other"
+
+if ! cat /var/lib/rdbox/.is_simple; then
+  is_simple=false
+else
+  is_simple=$(cat /var/lib/rdbox/.is_simple)
+fi
+
 if [[ $hname =~ $regex_master ]]; then
   if "${is_simple}"; then
     rdbox_type="simplexmst"
