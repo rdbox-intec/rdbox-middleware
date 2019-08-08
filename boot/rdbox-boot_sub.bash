@@ -361,6 +361,9 @@ for_slave () {
     if ! connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
       return 6
     fi
+    if ! wait_dhclient wlan10; then
+      return 7
+    fi
     return 0
   }
   _simplexmst_wifi_nomesh_hostapd () {

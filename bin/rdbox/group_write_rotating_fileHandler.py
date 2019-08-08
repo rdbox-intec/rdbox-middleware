@@ -3,6 +3,7 @@
 
 import os
 import logging
+import logging.handlers
 
 
 class GroupWriteRotatingFileHandler(logging.handlers.RotatingFileHandler):

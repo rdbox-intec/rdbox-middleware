@@ -348,7 +348,7 @@ if [ -e '/boot/id_rsa' ]; then
   for home_dir in /home/*; do
     user=$(basename "$home_dir")
     mkdir -p "$home_dir"/.ssh
-    chmod -m 700 "$home_dir"/.ssh
+    chmod 700 "$home_dir"/.ssh
     cp -n /boot/id_rsa "$home_dir"/.ssh/id_rsa
     chmod 600 "$home_dir"/.ssh/id_rsa
     chown -R "$user":"$user" "$home_dir"/.ssh
@@ -360,7 +360,7 @@ if [ -e '/boot/id_rsa.pub' ]; then
   for home_dir in /home/*; do
     user=$(basename "$home_dir")
     mkdir -p "$home_dir"/.ssh
-    chmod -m 700 "$home_dir"/.ssh
+    chmod 700 "$home_dir"/.ssh
     cat /boot/id_rsa.pub >> "$home_dir"/.ssh/authorized_keys
     chmod 600 "$home_dir"/.ssh/authorized_keys
     chown -R "$user":"$user" "$home_dir"/.ssh
