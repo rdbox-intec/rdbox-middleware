@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-from rdbox.rdbox_node import RdboxNode
-from rdbox.rdbox_node_list import RdboxNodeList
 
 class K8sResponseExternalList(object):
     def __init__(self, caller, resp_helper):
@@ -14,7 +12,8 @@ class K8sResponseExternalList(object):
     def call(self):
         self.org_response = self.caller.call()
         self.resp_helper.set_input_data_list(self.org_response)
-        list_of_K8sResponseExternal = self.resp_helper.parse()            # list[K8sResponseExternal]
+        # list[K8sResponseExternal]
+        list_of_K8sResponseExternal = self.resp_helper.parse()
         for k8s_response_external in list_of_K8sResponseExternal:
             self.add(k8s_response_external)
         return self
@@ -28,4 +27,3 @@ class K8sResponseExternalList(object):
 
     def get_external_list(self):
         return self.list
-

@@ -5,6 +5,7 @@ from rdbox.k8s_response_helper import K8sResponseHelper
 from rdbox.k8s_response_external import K8sResponseExternal
 from kubernetes.client.models import V1ServiceList
 
+
 class K8sResponseHelperV1ServiceList(K8sResponseHelper):
 
     def parse(self):
@@ -15,7 +16,8 @@ class K8sResponseHelperV1ServiceList(K8sResponseHelper):
         :return: list[K8sResponseExternal]
         """
         ret = []
-        v1svc_input_data_list = self.get_input_data_list().get_by_instance(V1ServiceList) # InputDataList = list[K8SRESP]
+        v1svc_input_data_list = self.get_input_data_list().get_by_instance(
+            V1ServiceList)  # InputDataList = list[K8SRESP]
         if len(v1svc_input_data_list.get_list()) < 1:
             return ret
         for v1_service_list in v1svc_input_data_list.get_list():         # v1_service_list = V1ServiceList
@@ -41,4 +43,3 @@ class K8sResponseHelperV1ServiceList(K8sResponseHelper):
 
     def _get_external_ip(self, v1srv):
         return v1srv.status.load_balancer.ingress[0].ip
-

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
+
 class InputDataList(object):
     def __init__(self):
         self.input_list = []

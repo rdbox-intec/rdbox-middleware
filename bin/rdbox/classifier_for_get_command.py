@@ -3,9 +3,10 @@
 
 from rdbox.get_command import GetCommandNode, GetCommandK8sExternalSvc
 
-from logging import getLogger, StreamHandler, Formatter
+from logging import getLogger
 r_logger = getLogger('rdbox_cli')
 r_print = getLogger('rdbox_cli').getChild("stdout")
+
 
 class ClassifierForGetCommand(object):
 
@@ -15,9 +16,9 @@ class ClassifierForGetCommand(object):
     FORMAT_LIST = FORMAT.split("|")
 
     DEFAULT_FORMAT = {
-                         GETTYPES_LIST[0]: FORMAT_LIST[1],
-                         GETTYPES_LIST[1]: FORMAT_LIST[2]
-                     }
+        GETTYPES_LIST[0]: FORMAT_LIST[1],
+        GETTYPES_LIST[1]: FORMAT_LIST[2]
+    }
 
     @classmethod
     def execute(cls, args):

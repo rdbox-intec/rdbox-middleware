@@ -149,6 +149,9 @@ if [[ $rdbox_type =~ $regex_master ]]; then
     /bin/systemctl disable transproxy.service
     /bin/systemctl stop transproxy.service
   fi
+  systemctl enable ntp.service
+  systemctl restart ntp.service
+  sleep 30
   apt update
   snap install helm --classic
 elif [[ $rdbox_type =~ $regex_slave ]]; then
@@ -296,6 +299,9 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
   ## install Helm.
+  systemctl enable ntp.service
+  systemctl restart ntp.service
+  sleep 30
   apt update
   snap install helm --classic
 elif [[ $rdbox_type =~ $regex_simplexslv ]]; then

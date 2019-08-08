@@ -4,13 +4,15 @@
 import os
 from crontab import CronTab
 
-from logging import getLogger, StreamHandler, Formatter
+from logging import getLogger
 r_logger = getLogger('rdbox_cli')
 r_print = getLogger('rdbox_cli').getChild("stdout")
 
+
 class CrontabControl(object):
     def __init__(self):
-        self.cron = CronTab(user=os.environ['SUDO_USER'] if 'SUDO_USER' in os.environ else os.environ['USER'])
+        self.cron = CronTab(
+            user=os.environ['SUDO_USER'] if 'SUDO_USER' in os.environ else os.environ['USER'])
         self.job = None
 
     def write_all(self, job_name, list_format_job):
@@ -49,7 +51,7 @@ class CrontabControl(object):
             self.job.setall(schedule)
             self.cron.write()
             return True
-        except:
+        except Exception:
             return False
 
     def has_specific_job(self, comment):
@@ -62,16 +64,16 @@ class CrontabControl(object):
         tmp = []
         for item in iter:
             tmp.append(item)
-        return len(tmp) >= 1 
+        return len(tmp) >= 1
 
     def remove_specific_job(self, comment):
         try:
             self.cron.remove_all(comment=comment)
             self.cron.write()
             return True
-        except:
+        except Exception:
             return False
 
     def read_jobs(self):
-        self.cron = CronTab(user=os.environ['SUDO_USER'] if 'SUDO_USER' in os.environ else os.environ['USER'])
-
+        self.cron = CronTab(
+            user=os.environ['SUDO_USER'] if 'SUDO_USER' in os.environ else os.environ['USER'])

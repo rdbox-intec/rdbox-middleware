@@ -5,8 +5,8 @@ import socket
 from rdbox.k8s_response_helper import K8sResponseHelper
 from rdbox.k8s_response_helper_v1servicelist import K8sResponseHelperV1ServiceList
 from rdbox.k8s_response_external import K8sResponseExternal
-from rdbox.input_data_list import InputDataList
 from kubernetes.client.models import V1beta1IngressList, V1ServiceList
+
 
 class K8sResponseHelperV1beta1IngressList(K8sResponseHelper):
 
@@ -17,27 +17,37 @@ class K8sResponseHelperV1beta1IngressList(K8sResponseHelper):
             Execute From K8sResponseExternalList.call()
         :return: list[K8sResponseExternal]
         """
-        ### ret
-        ret = [] # list[K8sResponseExternal]
-        ### Service
-        v1svc_input_data_list = self.get_input_data_list().get_by_instance(V1ServiceList) # InputDataList
+        # ret
+        ret = []  # list[K8sResponseExternal]
+        # Service
+        v1svc_input_data_list = self.get_input_data_list(
+        ).get_by_instance(V1ServiceList)  # InputDataList
         helper_v1svc = K8sResponseHelperV1ServiceList()
-        list_of_k8s_response_external = helper_v1svc.set_input_data_list(v1svc_input_data_list).parse()                  # list[K8sResponseExternal]
-        list_of_nginx_ingress_external = self._get_nginx_ingress_external_list(list_of_k8s_response_external)               # list[K8sResponseExternal]
-        list_of_ignore_nginx_ingress_external = self._get_ignore_nginx_ingress_external_list(list_of_k8s_response_external) # list[K8sResponseExternal]
-        ### Ingress:
-        v1ing_input_data_list = self.get_input_data_list().get_by_instance(V1beta1IngressList)                    # InputDataList
+        list_of_k8s_response_external = helper_v1svc.set_input_data_list(
+            v1svc_input_data_list).parse()                  # list[K8sResponseExternal]
+        list_of_nginx_ingress_external = self._get_nginx_ingress_external_list(
+            list_of_k8s_response_external)               # list[K8sResponseExternal]
+        list_of_ignore_nginx_ingress_external = self._get_ignore_nginx_ingress_external_list(
+            list_of_k8s_response_external)  # list[K8sResponseExternal]
+        # Ingress:
+        v1ing_input_data_list = self.get_input_data_list().get_by_instance(
+            V1beta1IngressList)                    # InputDataList
         if len(v1ing_input_data_list.get_list()) < 1:
             return ret
-        for v1beta1_ingress_list in v1ing_input_data_list.get_list():         # for V1beta1IngressList in InputDataList:
-            for v1ing in v1beta1_ingress_list.items:                          # for V1beta1Ingress in V1beta1IngressList:
-                for v1beta1_ingress_rule in v1ing.spec.rules:                 # for V1beta1IngressRule in list[V1beta1IngressRule]:
-                    hostname = self._check_and_modify_hostname(v1beta1_ingress_rule.host)
+        # for V1beta1IngressList in InputDataList:
+        for v1beta1_ingress_list in v1ing_input_data_list.get_list():
+            # for V1beta1Ingress in V1beta1IngressList:
+            for v1ing in v1beta1_ingress_list.items:
+                # for V1beta1IngressRule in list[V1beta1IngressRule]:
+                for v1beta1_ingress_rule in v1ing.spec.rules:
+                    hostname = self._check_and_modify_hostname(
+                        v1beta1_ingress_rule.host)
                     if hostname is None:
                         continue
                     location = K8sResponseHelper.LOCATION_NOT_DEFINE
                     ip = self._get_external_ip(v1ing)
-                    for external in list_of_nginx_ingress_external:              # for K8sResponseExternal in K8sResponseExternalList:
+                    # for K8sResponseExternal in K8sResponseExternalList:
+                    for external in list_of_nginx_ingress_external:
                         if ip is None:
                             ip = external.get_ip()
                         ex = K8sResponseExternal(v1ing, hostname, ip, location)

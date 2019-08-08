@@ -98,12 +98,11 @@ iplist () {
     int_to_ip4 "$num"
     [[ "$num" == "$max" ]] && break || num=$(("$num"+1))
   done
+  echo ""
 }
 
 ipmax() {
-  local iplst
   local max
-  iplst=$(iplist "$1" "$2")
-  max=$(echo "$iplst" | awk '{print $NF}')
+  max=$(iplist "$1" "$2" | tr '\n' ' ' | awk '{print $NF}')
   echo "$max"
 }

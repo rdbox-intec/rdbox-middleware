@@ -48,13 +48,13 @@ class TestClassifierForGetCommand(unittest.TestCase):
         actual = ClassifierForGetCommand._validation(info_type, format_type)
         self.assertEqual(expected, actual)
 
-
     def test_validation_type_hogehoge(self):
         info_type = "hogehoge"
         format_type = "default"
         expected = False
         actual = ClassifierForGetCommand._validation(info_type, format_type)
         self.assertEqual(expected, actual)
+
 
 if __name__ == "__main__":
     unittest.main()

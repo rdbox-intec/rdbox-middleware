@@ -7,13 +7,12 @@ from rdbox.classifier_for_enable_disable_command import \
 from rdbox.crontab_control import CrontabControl
 from rdbox.helm_control import HelmControl
 
-from logging import getLogger, StreamHandler, Formatter
+from logging import getLogger
 r_logger = getLogger('rdbox_cli')
 r_print = getLogger('rdbox_cli').getChild("stdout")
 
 
 class ClassifierForDisableCommand(ClassifierForEnableDisableCommand):
-
 
     @classmethod
     def execute(cls, args):

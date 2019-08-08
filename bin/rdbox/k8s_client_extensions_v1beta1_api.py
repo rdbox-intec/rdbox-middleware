@@ -4,6 +4,7 @@
 from rdbox.k8s_client import K8sClient
 from kubernetes import client, config
 
+
 class K8sClientExtensionsV1beta1Api(K8sClient):
     def __init__(self, method_name, opt={}):
         self.method_name = method_name

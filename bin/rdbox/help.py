@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-from logging import getLogger, StreamHandler, Formatter
+from logging import getLogger
 r_logger = getLogger('rdbox_cli')
 r_print = getLogger('rdbox_cli').getChild("stdout")
+
 
 class Help(object):
     @classmethod

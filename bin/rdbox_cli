@@ -3,12 +3,10 @@
 
 import os
 import sys
-import inspect
 import argparse
 import logging
 import rdbox.config
 from logging import getLogger, StreamHandler, Formatter
-from logging.handlers import RotatingFileHandler
 
 from rdbox.group_write_rotating_fileHandler import GroupWriteRotatingFileHandler
 from rdbox.version import Version
@@ -22,15 +20,20 @@ from rdbox.dns_k8s_external_svc import DnsK8sExternalSvc
 r_logger = getLogger('rdbox_cli')
 r_print = getLogger('rdbox_cli').getChild("stdout")
 
+
 def r_logger_setup():
     # r_logger
     r_logger = getLogger('rdbox_cli')
     r_logger.setLevel(logging.DEBUG)
-    users  = "%s/%s" % (os.environ['SUDO_USER'], os.environ['USER']) if 'SUDO_USER' in os.environ else os.environ['USER']
-    handler_format = Formatter(fmt='%(asctime)s - {users} - %(process)d - %(levelname)s - %(message)s'.format(users=users), datefmt='%Y-%m-%dT%H:%M:%S%z')
+    users = "%s/%s" % (os.environ['SUDO_USER'], os.environ['USER']
+                       ) if 'SUDO_USER' in os.environ else os.environ['USER']
+    handler_format = Formatter(
+        fmt='%(asctime)s - {users} - %(process)d - %(levelname)s - %(message)s'.format(users=users), datefmt='%Y-%m-%dT%H:%M:%S%z')
     file_path = rdbox.config.get("rdbox", "log_path")
-    file_handler = GroupWriteRotatingFileHandler(filename=file_path, maxBytes=10*1024*1024, backupCount=10)
-    file_handler.setLevel(getattr(logging, rdbox.config.get("rdbox", "log_level")))
+    file_handler = GroupWriteRotatingFileHandler(
+        filename=file_path, maxBytes=10 * 1024 * 1024, backupCount=10)
+    file_handler.setLevel(
+        getattr(logging, rdbox.config.get("rdbox", "log_level")))
     file_handler.setFormatter(handler_format)
     r_logger.addHandler(file_handler)
     # r_print
@@ -38,9 +41,11 @@ def r_logger_setup():
     r_print.setLevel(logging.DEBUG)
     handler_format = Formatter('%(message)s')
     stream_handler = StreamHandler()
-    stream_handler.setLevel(getattr(logging, rdbox.config.get("rdbox", "out_level")))
+    stream_handler.setLevel(
+        getattr(logging, rdbox.config.get("rdbox", "out_level")))
     stream_handler.setFormatter(handler_format)
     r_print.addHandler(stream_handler)
+
 
 def main():
     parser = argparse.ArgumentParser(description='RDBOX service.')
@@ -50,25 +55,34 @@ def main():
     parser_version.set_defaults(handler=Version.command_version)
     # help
     parser_help = subparsers.add_parser('help', help='see `help -h`')
-    parser_help.add_argument('command', help='command name which help is shown')
+    parser_help.add_argument(
+        'command', help='command name which help is shown')
     parser_help.set_defaults(handler=Help.command_help)
     # init
-    parser_get = subparsers.add_parser('init', help='Initial processing of various services of RDBOX is executed.')
-    parser_get.add_argument('platform_type', help=ClassifierForInitCommand.PLATFORM_TYPES)
+    parser_get = subparsers.add_parser(
+        'init', help='Initial processing of various services of RDBOX is executed.')
+    parser_get.add_argument(
+        'platform_type', help=ClassifierForInitCommand.PLATFORM_TYPES)
     parser_get.set_defaults(handler=ClassifierForInitCommand.execute)
     # get
     parser_get = subparsers.add_parser('get', help='Get information on RDBOX.')
     parser_get.add_argument('info_type', help=ClassifierForGetCommand.GETTYPES)
-    parser_get.add_argument('-f', '--format', default="default", help=ClassifierForGetCommand.FORMAT)
+    parser_get.add_argument(
+        '-f', '--format', default="default", help=ClassifierForGetCommand.FORMAT)
     parser_get.set_defaults(handler=ClassifierForGetCommand.execute)
     # enable
-    parser_get = subparsers.add_parser('enable', help='Enables the specified function of RDBOX.')
-    parser_get.add_argument('function_type', help=ClassifierForEnableCommand.FUNCTYPES)
-    parser_get.add_argument('-s', '--set', default="not_set", help='separate values with commas: key1=val1,key2=val2')
+    parser_get = subparsers.add_parser(
+        'enable', help='Enables the specified function of RDBOX.')
+    parser_get.add_argument(
+        'function_type', help=ClassifierForEnableCommand.FUNCTYPES)
+    parser_get.add_argument('-s', '--set', default="not_set",
+                            help='separate values with commas: key1=val1,key2=val2')
     parser_get.set_defaults(handler=ClassifierForEnableCommand.execute)
     # disable
-    parser_get = subparsers.add_parser('disable', help='Disables the specified function of RDBOX.')
-    parser_get.add_argument('function_type', help=ClassifierForDisableCommand.FUNCTYPES)
+    parser_get = subparsers.add_parser(
+        'disable', help='Disables the specified function of RDBOX.')
+    parser_get.add_argument(
+        'function_type', help=ClassifierForDisableCommand.FUNCTYPES)
     parser_get.set_defaults(handler=ClassifierForDisableCommand.execute)
     # hidden
     parser_get = subparsers.add_parser('hidden', help='hidden')
@@ -92,11 +106,10 @@ def main():
         ret = True
     return ret
 
-    
-if __name__=="__main__":
+
+if __name__ == "__main__":
     ret = main()
     if ret:
         sys.exit(0)
     else:
         sys.exit(1)
-

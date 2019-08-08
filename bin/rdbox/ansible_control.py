@@ -15,7 +15,7 @@ from rdbox.classifier_for_get_command import ClassifierForGetCommand
 from rdbox.get_command import GetCommandNode
 from rdbox.std_logger_writer import StdLoggerWriter
 
-from logging import getLogger, StreamHandler, Formatter
+from logging import getLogger
 r_logger = getLogger('rdbox_cli')
 r_print = getLogger('rdbox_cli').getChild("stdout")
 
@@ -37,7 +37,8 @@ class AnsibleControl(object):
         tags = set()
         tags.add("docker_config")
         tags.add("docker_service")
-        extra_vars = {"registrymirrors": {"registry-mirrors":[registry_mirrors_url]}}
+        extra_vars = {"registrymirrors": {
+            "registry-mirrors": [registry_mirrors_url]}}
         return self._common_playbook(playbook_name, tags, extra_vars)
 
     def playbook_dockerconfig_disable_all(self):
@@ -51,7 +52,8 @@ class AnsibleControl(object):
     def _common_playbook(self, playbook_name, tags_set, extra_vars_dict):
         user = os.environ['SUDO_USER'] if 'SUDO_USER' in os.environ else os.environ['USER']
         keyfile_path = "/home/{user}/.ssh/id_rsa".format(user=user)
-        ret = self.playbook_all(playbook_name, list(tags_set), extra_vars_dict, keyfile_path)
+        ret = self.playbook_all(playbook_name, list(
+            tags_set), extra_vars_dict, keyfile_path)
         if ret == 0:
             return True
         else:
@@ -61,26 +63,32 @@ class AnsibleControl(object):
         ret = -1
         playbook_path = self._preinstall_playbook_path_builder(playbook_name)
         r_print.debug(playbook_path)
-        inventry_path = '{work_dir}/.inventry'.format(work_dir=rdbox.config.get("ansible", "work_dir")) 
+        inventry_path = '{work_dir}/.inventry'.format(
+            work_dir=rdbox.config.get("ansible", "work_dir"))
         try:
             loader = DataLoader()
             self._create_inventry_file_from_k8s(inventry_path)
             inventory = InventoryManager(loader=loader, sources=inventry_path)
-            variable_manager = VariableManager(loader=loader, inventory=inventory)
+            variable_manager = VariableManager(
+                loader=loader, inventory=inventory)
             variable_manager.extra_vars = extra_vars_dict
             if not os.path.exists(playbook_path):
-                raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), playbook_path)
-            Options = namedtuple('Options', ['listtags', 'listtasks', 'listhosts', 'syntax', 'connection','module_path', 'forks', 'remote_user', 'private_key_file', 'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args', 'scp_extra_args', 'become', 'become_method', 'become_user', 'verbosity', 'check','diff', 'tags'])
-            options = Options(listtags=False, listtasks=False, listhosts=False, syntax=False, connection='smart', module_path=None, forks=5, remote_user=None, private_key_file=keyfile_path, ssh_common_args=None, ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None, become=True, become_method='sudo', become_user='root', verbosity=None, check=False, diff=False, tags=tags_set)
+                raise FileNotFoundError(
+                    errno.ENOENT, os.strerror(errno.ENOENT), playbook_path)
+            Options = namedtuple('Options', ['listtags', 'listtasks', 'listhosts', 'syntax', 'connection', 'module_path', 'forks', 'remote_user', 'private_key_file',
+                                             'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args', 'scp_extra_args', 'become', 'become_method', 'become_user', 'verbosity', 'check', 'diff', 'tags'])
+            options = Options(listtags=False, listtasks=False, listhosts=False, syntax=False, connection='smart', module_path=None, forks=5, remote_user=None, private_key_file=keyfile_path, ssh_common_args=None,
+                              ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None, become=True, become_method='sudo', become_user='root', verbosity=None, check=False, diff=False, tags=tags_set)
             passwords = {}
-            pbex = PlaybookExecutor(playbooks=[playbook_path], inventory=inventory, variable_manager=variable_manager, loader=loader, options=options, passwords=passwords)
+            pbex = PlaybookExecutor(playbooks=[playbook_path], inventory=inventory,
+                                    variable_manager=variable_manager, loader=loader, options=options, passwords=passwords)
             # redirect
             bak_stdout = sys.stdout
             bak_stderr = sys.stderr
             sys.stdout = StdLoggerWriter(r_print.debug)
             sys.stderr = StdLoggerWriter(r_print.info)
             ret = pbex.run()
-        except:
+        except Exception:
             sys.stdout = bak_stdout
             sys.stderr = bak_stderr
             import traceback
@@ -92,7 +100,7 @@ class AnsibleControl(object):
         # Cleanup
         try:
             self._remove_file(inventry_path)
-        except:
+        except Exception:
             # No problem
             pass
         return ret
@@ -104,7 +112,8 @@ class AnsibleControl(object):
 
     def _create_inventry_file_from_k8s(self, inventry_path):
         get_command_node = GetCommandNode()
-        get_command = get_command_node.build(ClassifierForGetCommand.FORMAT_LIST[1])
+        get_command = get_command_node.build(
+            ClassifierForGetCommand.FORMAT_LIST[1])
         _, now_report = get_command.execute()
         self._write_file(inventry_path, now_report)
 

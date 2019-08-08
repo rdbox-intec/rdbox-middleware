@@ -8,18 +8,16 @@ import socket
 import os
 import json
 import urllib.request
-import sys
 import kubernetes.client
 from kubernetes.client.rest import ApiException
 import rdbox.config
-from rdbox.get_command import GetCommandNode
-from rdbox.classifier_for_get_command import ClassifierForGetCommand
 from rdbox.ansible_control import AnsibleControl
 from rdbox.k8s_client_core_v1_api import K8sClientCoreV1Api
 
-from logging import getLogger, StreamHandler, Formatter
+from logging import getLogger
 r_logger = getLogger('rdbox_cli')
 r_print = getLogger('rdbox_cli').getChild("stdout")
+
 
 class ClassifierForInitCommand(object):
 
@@ -28,11 +26,15 @@ class ClassifierForInitCommand(object):
 
     OPENSSL_PATH = shutil.which('openssl')
     OPENSSL_KEY_CERT_DIRPATH = rdbox.config.get("rdbox", "openssl_keycert_dir")
-    OPENSSL_KEY_NAME = '{common_names}.key'.format(common_names=rdbox.config.get("kubernetes", "rdbox_common_certname"))
-    OPENSSL_CRT_NAME = '{common_names}.crt'.format(common_names=rdbox.config.get("kubernetes", "rdbox_common_certname"))
+    OPENSSL_KEY_NAME = '{common_names}.key'.format(
+        common_names=rdbox.config.get("kubernetes", "rdbox_common_certname"))
+    OPENSSL_CRT_NAME = '{common_names}.crt'.format(
+        common_names=rdbox.config.get("kubernetes", "rdbox_common_certname"))
 
-    KUBECTL_COMMON_CERT_NAME = rdbox.config.get("kubernetes", "rdbox_common_certname")
-    KUBECTL_COMMON_CERT_NSPACE = rdbox.config.get("kubernetes", "rdbox_namespace")
+    KUBECTL_COMMON_CERT_NAME = rdbox.config.get(
+        "kubernetes", "rdbox_common_certname")
+    KUBECTL_COMMON_CERT_NSPACE = rdbox.config.get(
+        "kubernetes", "rdbox_namespace")
 
     @classmethod
     def execute(cls, args):
@@ -51,8 +53,10 @@ class ClassifierForInitCommand(object):
     @classmethod
     def _issue_secret(cls):
         try:
-            key_path = os.path.join(cls.OPENSSL_KEY_CERT_DIRPATH, cls.OPENSSL_KEY_NAME)
-            crt_path = os.path.join(cls.OPENSSL_KEY_CERT_DIRPATH, cls.OPENSSL_CRT_NAME)
+            key_path = os.path.join(
+                cls.OPENSSL_KEY_CERT_DIRPATH, cls.OPENSSL_KEY_NAME)
+            crt_path = os.path.join(
+                cls.OPENSSL_KEY_CERT_DIRPATH, cls.OPENSSL_CRT_NAME)
             if os.path.exists(key_path) and os.path.exists(crt_path):
                 if cls._yes_no_input():
                     r_print.info("<<Step1. skip.>>")
@@ -70,7 +74,7 @@ class ClassifierForInitCommand(object):
                 cls._kubectl_create_ns(cls.KUBECTL_COMMON_CERT_NSPACE)
                 cls._kubectl_secret_tls(key_path, crt_path)
             cls._print_separator("#")
-        except:
+        except Exception:
             import traceback
             r_logger.error(traceback.format_exc())
             return False
@@ -86,7 +90,8 @@ class ClassifierForInitCommand(object):
     def _validation(cls, args):
         master_hostname = rdbox.config.get("rdbox", "master_hostname")
         if socket.gethostname() != master_hostname:
-            r_print.info("This command can be executed only on the %s" % master_hostname)
+            r_print.info(
+                "This command can be executed only on the %s" % master_hostname)
             return False
         if os.getuid() != 0:
             r_print.info("non-root user!")
@@ -96,7 +101,8 @@ class ClassifierForInitCommand(object):
     @classmethod
     def _yes_no_input(cls):
         while True:
-            choice = input("crt file already exists. Do you want to skip creating a new one? 'yes' or 'no' [y/N]: ").lower()
+            choice = input(
+                "crt file already exists. Do you want to skip creating a new one? 'yes' or 'no' [y/N]: ").lower()
             if choice in ['y', 'ye', 'yes', '']:
                 return True
             elif choice in ['n', 'no']:
@@ -104,21 +110,24 @@ class ClassifierForInitCommand(object):
 
     @classmethod
     def _gen_key(cls, key_path, crt_path):
-        r_print.info("<<Step1. It is being issued a self-signed certificate.>>")
+        r_print.info(
+            "<<Step1. It is being issued a self-signed certificate.>>")
         os.makedirs(cls.OPENSSL_KEY_CERT_DIRPATH, exist_ok=True)
         req = urllib.request.Request("http://ipinfo.io")
         c = "JP"
         st = "Tokyo"
-        l = "Tokyo"
-        cn = "*.%s" % (socket.getaddrinfo(socket.gethostname(), 0, flags=socket.AI_CANONNAME)[0][3])
+        locatin = "Tokyo"
+        cn = "*.%s" % (socket.getaddrinfo(socket.gethostname(),
+                                          0, flags=socket.AI_CANONNAME)[0][3])
         try:
             with urllib.request.urlopen(req) as res:
                 body = res.read()
                 content = json.loads(body.decode('utf8'))
                 c = content.get("country")
                 st = content.get("region")
-                l = content.get("city")
-            cmd = '{openssl} req -newkey rsa:4096 -nodes -sha256 -keyout {key_path} -x509 -days 365 -out {crt_path} -subj "/C={c}/ST={st}/L={l}/CN={cn}"'.format(openssl=cls.OPENSSL_PATH, key_path=key_path, crt_path=crt_path, c=c, st=st, l=l, cn=cn)
+                locatin = content.get("city")
+            cmd = '{openssl} req -newkey rsa:4096 -nodes -sha256 -keyout {key_path} -x509 -days 365 -out {crt_path} -subj "/C={c}/ST={st}/L={loc}/CN={cn}"'.format(
+                openssl=cls.OPENSSL_PATH, key_path=key_path, crt_path=crt_path, c=c, st=st, loc=locatin, cn=cn)
             r_print.info(cmd)
             subprocess.check_output(cmd, shell=True)
         except Exception as e:
@@ -147,18 +156,19 @@ class ClassifierForInitCommand(object):
         opts = {"body": body}
         k8s_core_v1 = K8sClientCoreV1Api("create_namespace", opts)
         try:
-            v1_ns = k8s_core_v1.call()
-        except Exception as e:
+            k8s_core_v1.call()
+        except Exception:
             pass
         r_print.info("created ns")
 
     @classmethod
     def _kubectl_secret_tls(cls, key_path, crt_path):
         # delete
-        opts = {"name": cls.KUBECTL_COMMON_CERT_NAME, "namespace": cls.KUBECTL_COMMON_CERT_NSPACE, "body": kubernetes.client.V1DeleteOptions()}
+        opts = {"name": cls.KUBECTL_COMMON_CERT_NAME, "namespace": cls.KUBECTL_COMMON_CERT_NSPACE,
+                "body": kubernetes.client.V1DeleteOptions()}
         k8s_core_v1 = K8sClientCoreV1Api("delete_namespaced_secret", opts)
         try:
-            v1_status = k8s_core_v1.call()
+            k8s_core_v1.call()
         except ApiException as e:
             if e.status == 404:
                 pass
@@ -169,18 +179,18 @@ class ClassifierForInitCommand(object):
         b64_key = cls._base64encode_from_file(key_path)
         b64_crt = cls._base64encode_from_file(crt_path)
         data = {"tls.crt": b64_crt, "tls.key": b64_key}
-        metadata = {"name": cls.KUBECTL_COMMON_CERT_NAME, "namespace": cls.KUBECTL_COMMON_CERT_NSPACE}
-        body = kubernetes.client.V1Secret(data=data, metadata=metadata, type="kubernetes.io/tls")
+        metadata = {"name": cls.KUBECTL_COMMON_CERT_NAME,
+                    "namespace": cls.KUBECTL_COMMON_CERT_NSPACE}
+        body = kubernetes.client.V1Secret(
+            data=data, metadata=metadata, type="kubernetes.io/tls")
         opts = {"namespace": cls.KUBECTL_COMMON_CERT_NSPACE, "body": body}
         k8s_core_v1 = K8sClientCoreV1Api("create_namespaced_secret", opts)
         try:
-            v1_secret = k8s_core_v1.call()
+            k8s_core_v1.call()
         except Exception as e:
             raise e
         r_print.info("created secret tls")
 
     @classmethod
     def _print_separator(cls, sep, count=20):
-        r_print.info("%s" % (sep*count))
-
-
+        r_print.info("%s" % (sep * count))

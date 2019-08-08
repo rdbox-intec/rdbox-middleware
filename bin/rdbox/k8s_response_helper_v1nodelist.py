@@ -5,6 +5,7 @@ from rdbox.k8s_response_helper import K8sResponseHelper
 from rdbox.k8s_response_external import K8sResponseExternal
 from kubernetes.client.models import V1NodeList
 
+
 class K8sResponseHelperV1NodeList(K8sResponseHelper):
 
     def parse(self):
@@ -15,7 +16,8 @@ class K8sResponseHelperV1NodeList(K8sResponseHelper):
         :return: list[K8sResponseExternal]
         """
         ret = []
-        v1node_input_data_list = self.get_input_data_list().get_by_instance(V1NodeList) # InputDataList = list[K8SRESP]
+        v1node_input_data_list = self.get_input_data_list().get_by_instance(
+            V1NodeList)  # InputDataList = list[K8SRESP]
         if len(v1node_input_data_list.get_list()) < 1:
             return ret
         for v1_node_list in v1node_input_data_list.get_list():         # v1_node_list = V1NodeList
@@ -25,10 +27,12 @@ class K8sResponseHelperV1NodeList(K8sResponseHelper):
                 hostname = v1node.metadata.labels.get("kubernetes.io/hostname")
                 if hostname is None:
                     continue
-                ip = v1node.metadata.annotations.get("flannel.alpha.coreos.com/public-ip")
+                ip = v1node.metadata.annotations.get(
+                    "flannel.alpha.coreos.com/public-ip")
                 if ip is None:
                     continue
-                location = v1node.metadata.labels.get("node.rdbox.com/location", K8sResponseHelper.LOCATION_NOT_DEFINE)
+                location = v1node.metadata.labels.get(
+                    "node.rdbox.com/location", K8sResponseHelper.LOCATION_NOT_DEFINE)
                 ex = K8sResponseExternal(v1node, hostname, ip, location)
                 ret.append(ex)
         return ret

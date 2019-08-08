@@ -18,7 +18,7 @@ do
   count=$((count + 1))
   if sudo ping -w 1 -n -c 1 "$IP_K8S_MASTER"  >> /dev/null; then
     echo "$(date +%H:%M:%S:%N) +++ OK +++"
-    success=$(success + 1)
+    success=$((success + 1))
     if [ "$success" -eq $SUCCESS_THRESHOLD ]; then
       sudo kubeadm join "$@"
       exit 0
