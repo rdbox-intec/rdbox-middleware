@@ -15,8 +15,8 @@ hname=$(/bin/hostname)
 RETRY_COUNT=5
 WPA_LOG=/var/log/rdbox/rdbox_boot_wpa.log
 HOSTAPD_LOG=/var/log/rdbox/rdbox_boot_hostapd.log
-PIDFILE_SUPLICANT=/var/run/wpa_supplicant.pid
-PIDFILE_HOSTAPD=/var/run/hostapd.pid
+PIDFILE_SUPLICANT=/run/wpa_supplicant.pid
+PIDFILE_HOSTAPD=/run/hostapd.pid
 is_active_yoursite_wifi=false
 
 check_active_yoursite_wifi () {
@@ -340,78 +340,103 @@ for_slave () {
   return 0
 }
 
-  _simplexmst_wifi_simplemesh_wpa () {
-    # 1 dongle
-    if ! iw dev wlan0 interface add awlan0 type __ap; then
-      return 1
-    fi
-    if ! /usr/sbin/batctl if add awlan0; then
-      return 2
-    fi
-    if ! ifup awlan0; then
-      return 3
-    fi
-    if ! iw dev wlan0 interface add awlan1 type __ap; then
-      return 4
-    fi
-    if ! ifup awlan1; then
-      return 5
-    fi
-    source /etc/rdbox/network/iptables.mstsimple.wlan10
-    if ! connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
+_simplexmst_wifi_simplemesh_wpa () {
+  # 1 dongle
+  if ! iw dev wlan0 interface add awlan0 type __ap; then
+    return 1
+  fi
+  if ! /usr/sbin/batctl if add awlan0; then
+    return 2
+  fi
+  if ! ifup awlan0; then
+    return 3
+  fi
+  if ! iw dev wlan0 interface add awlan1 type __ap; then
+    return 4
+  fi
+  if ! ifup awlan1; then
+    return 5
+  fi
+  /bin/systemctl restart networking.service
+  source /etc/rdbox/network/iptables.mstsimple.wlan10
+  if ! connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
+    return 6
+  fi
+  if ! wait_dhclient wlan10; then
+    return 7
+  fi
+  return 0
+}
+
+_simplexmst_wifi_nomesh_hostapd () {
+  # 0 dongle (Wi-Fi)
+  if ! iw dev wlan10 interface add awlan1 type __ap; then
+    return 1
+  fi
+  _mac_addr=$(generate_MACAddress)
+  echo "A MAC address was generated for awlan1: $_mac_addr"
+  if ! ifconfig awlan1 hw ether "$_mac_addr"; then
+    return 2
+  fi
+  if ! ifup awlan1; then
+    return 3
+  fi
+  sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^bridge\=/c\#bridge\=br0' /etc/rdbox/hostapd_ap_bg.conf
+  source /etc/rdbox/network/iptables.mstsimple.wlan10
+  if ! startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf; then
+    return 4
+  fi
+  return 0
+}
+_simplexmst_ether_common_connect () {
+  if ! iw dev wlan0 interface add awlan0 type __ap; then
+    return 1
+  fi
+  if ! /usr/sbin/batctl if add awlan0; then
+    return 2
+  fi
+  if ! ifup awlan0; then
+    return 3
+  fi
+  if ! iw dev wlan0 interface add awlan1 type __ap; then
+    return 4
+  fi
+  if ! ifup awlan1; then
+    return 5
+  fi
+  /bin/systemctl restart networking.service
+  source /etc/rdbox/network/iptables.mstsimple
+  _ip_count=$(/sbin/ifconfig eth0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
+  if [ "$_ip_count" -eq 0 ]; then
+    if ! wait_dhclient eth0; then
       return 6
     fi
-    if ! wait_dhclient wlan10; then
-      return 7
-    fi
-    return 0
-  }
-  _simplexmst_wifi_nomesh_hostapd () {
-    # 0 dongle (Wi-Fi)
-    if ! iw dev wlan10 interface add awlan1 type __ap; then
-      return 1
-    fi
-    _mac_addr=$(generate_MACAddress)
-    echo "A MAC address was generated for awlan1: $_mac_addr"
-    if ! ifconfig awlan1 hw ether "$_mac_addr"; then
-      return 2
-    fi
-    if ! ifup awlan1; then
-      return 3
-    fi
-    sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
-    sed -i -e '/^bridge\=/c\#bridge\=br0' /etc/rdbox/hostapd_ap_bg.conf
-    source /etc/rdbox/network/iptables.mstsimple.wlan10
-    if ! startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf; then
-      return 4
-    fi
-    return 0
-  }
-  _simplexmst_ether_common_connect () {
-    # 0 dongle (Ethernet)
-    source /etc/rdbox/network/iptables.mstsimple
-    _ip_count=$(/sbin/ifconfig eth0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
-    if [ "$_ip_count" -eq 0 ]; then
-      if ! wait_dhclient eth0; then
-        return 1
-      fi
-    fi
-    return 0
-  }
-  _simplexmst_wifi_nomesh_wpa () {
-    # 0 dongle (Wi-Fi)
-    if ! connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
-      return 1
-    fi
-    if ! wait_dhclient wlan10; then
-      return 2
-    fi
-    sleep 30
-    if ! brctl addif br0 awlan1; then
-      return 3
-    fi
-    return 0
-  }
+  fi
+  return 0
+}
+_simplexmst_ether_simplemesh_hostapd () {
+  sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
+  if ! startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf; then
+    return 6
+  fi
+  return 0
+}
+
+_simplexmst_wifi_nomesh_wpa () {
+  # 0 dongle (Wi-Fi)
+  if ! connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
+    return 1
+  fi
+  if ! wait_dhclient wlan10; then
+    return 2
+  fi
+  sleep 30
+  if ! brctl addif br0 awlan1; then
+    return 3
+  fi
+  return 0
+}
 
 
 for_simplexmst () {
@@ -460,12 +485,19 @@ for_simplexmst () {
           ret=$?
         fi
       else
-        # 0 dongle (Ethernet)
-        sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
-        # hostapd #######################
-        startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
-        ret=$?
-        #################################
+        if $is_simple_mesh; then
+          # 1 dongle
+          _simplexmst_ether_simplemesh_hostapd
+          ret=$?
+          #################################
+        else
+          # 0 dongle (Ethernet)
+          sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
+          # hostapd #######################
+          startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
+          ret=$?
+          #################################
+        fi
       fi
       if [ "$ret" -eq 0 ]; then
         break
@@ -478,7 +510,6 @@ for_simplexmst () {
     COUNT=$((COUNT + 1))
   done
   # Success Connection
-  cp $PIDFILE_HOSTAPD $PIDFILE_SUPLICANT
   if wait_tap_device; then
     /sbin/brctl addif br0 tap_br0
   else
@@ -529,7 +560,7 @@ for_simplexslv () {
   if ! check_batman; then
     return 1
   fi
-  
+
   if ! wait_dhclient br0; then
     return 1
   fi
@@ -583,4 +614,5 @@ bootup
 # Post process
 /bin/echo "Connected!!"
 /bin/echo "$(date)"
+
 exit 0

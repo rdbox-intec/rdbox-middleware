@@ -9,8 +9,8 @@ regex_simplexmst='^.*simplexmst.*'
 regex_simplexslv='^.*simplexslv.*'
 regex_other='^.*other.*'
 hname=$(/bin/hostname)
-PIDFILE_SUPLICANT=/var/run/wpa_supplicant.pid
-PIDFILE_HOSTAPD=/var/run/hostapd.pid
+PIDFILE_SUPLICANT=/run/wpa_supplicant.pid
+PIDFILE_HOSTAPD=/run/hostapd.pid
 BOOT_LOG=/var/log/rdbox/rdbox_boot.log
 
 is_simple=false
