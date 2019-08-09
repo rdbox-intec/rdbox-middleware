@@ -171,6 +171,9 @@ elif [[ $rdbox_type =~ $regex_slave ]]; then
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
   sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
+  systemctl enable ntp.service
+  systemctl restart ntp.service
+  sleep 30
   apt update
 elif [[ $rdbox_type =~ $regex_vpnbridge ]]; then
   mv -n /etc/network/interfaces /etc/network/interfaces.org
@@ -189,6 +192,9 @@ elif [[ $rdbox_type =~ $regex_vpnbridge ]]; then
   sleep 30
   /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
   /bin/systemctl restart softether-vpnbridge.service
+  systemctl enable ntp.service
+  systemctl restart ntp.service
+  sleep 30
   apt update
 elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
@@ -329,6 +335,9 @@ elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
   sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
+  systemctl enable ntp.service
+  systemctl restart ntp.service
+  sleep 30
   apt update
 else
   mv -n /etc/network/interfaces /etc/network/interfaces.org
@@ -341,6 +350,9 @@ else
   /bin/systemctl start sshd.service
   /sbin/ifup wlan10
   /sbin/dhclient wlan10
+  systemctl enable ntp.service
+  systemctl restart ntp.service
+  sleep 30
   apt update
 fi
 
