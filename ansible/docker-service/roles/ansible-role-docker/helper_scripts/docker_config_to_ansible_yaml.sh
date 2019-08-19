@@ -1,3 +1,4 @@
+#!/bin/bash
 # https://docs.docker.com/engine/reference/commandline/dockerd/#/linux-configuration-file
 
 # Set top-level variables
