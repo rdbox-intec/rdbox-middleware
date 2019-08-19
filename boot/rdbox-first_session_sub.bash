@@ -302,6 +302,9 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
+  if [[ ! -e /etc/rdbox/wpa_supplicant_yoursite.conf ]]; then
+    sed '/wpa_supplicant.pid/d' /lib/systemd/system
+  fi
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
   ## install Helm.
