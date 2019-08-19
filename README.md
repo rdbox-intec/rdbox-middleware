@@ -50,7 +50,7 @@ In this document, we run the initial process for using rdbox_cli and some of the
     ```bash
     $ ssh ubuntu@rdbox-master-00
     ```
-2.  Initialize rdbox_cli. It will be successful if the terminal displays "[rdbox_cli] Success completed." In case of other display, please re-execute.
+2.  Initialize rdbox_cli. It will be successful if the terminal displays "\[rdbox_cli] Success completed." In case of other display, please re-execute.
     ```bash
     $ sudo rdbox_cli init onprem
     :
@@ -91,7 +91,7 @@ rdbox-k8s-worker-cloud-01  ansible_host=192.168.179.201  ansible_python_interpre
 rdbox-k8s-worker-cloud-02  ansible_host=192.168.179.115  ansible_python_interpreter=/usr/bin/python3
 ```
 
-#### Enable temporary cache registry.
+#### Enable temporary cache registry
 
 As an example, in RDBOX we will describe a method for activating temporary container cache registry. We provide a transparent cache service that is transparent to users in RDBOX network.
 You can get the following effects.
@@ -128,7 +128,7 @@ Please note that data persistence is not guaranteed.
     ```
 5.  Thereafter, when pulling the same image, the temporary container cache registry is used preferentially. When deploying images to a large number of robots, we can efficiently distribute images. By pre-caching the image.
 
-#### Disable temporary cache registry.
+#### Disable temporary cache registry
 
 If you do not need this function, please disable the function.
 

@@ -43,5 +43,6 @@ class AnsibleRdboxNodeFormatter(RdboxNodeFormatter):
         r_print.info(output_str)
         return rdbox_node_list, output_str
 
+    @classmethod
     def _get_prety_string(self, before_string, max_width, prety_str=" "):
         return prety_str * (max_width - len(before_string))
