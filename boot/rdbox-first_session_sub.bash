@@ -303,7 +303,7 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
   if [[ ! -e /etc/rdbox/wpa_supplicant_yoursite.conf ]]; then
-    sed '/wpa_supplicant.pid/d' /lib/systemd/system
+    sed -i '/wpa_supplicant.pid/d' /lib/systemd/system/rdbox-boot.service
   fi
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
