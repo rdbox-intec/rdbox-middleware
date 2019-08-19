@@ -11,7 +11,6 @@ TimeoutSec=0
 RemainAfterExit=yes
 SysVStartPriority=99
 PIDFile=/run/hostapd.pid
-PIDFile=/run/wpa_supplicant.pid
 Restart=on-failure
 
 [Install]
