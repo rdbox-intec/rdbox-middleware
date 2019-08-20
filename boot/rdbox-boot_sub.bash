@@ -390,7 +390,6 @@ _simplexmst_wifi_nomesh_hostapd () {
   return 0
 }
 _simplexmst_ether_common_connect () {
-  source /etc/rdbox/network/iptables.mstsimple
   _ip_count=$(/sbin/ifconfig eth0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
   if [ "$_ip_count" -eq 0 ]; then
     if ! wait_dhclient eth0; then
@@ -400,6 +399,25 @@ _simplexmst_ether_common_connect () {
   return 0
 }
 _simplexmst_ether_simplemesh_hostapd () {
+  # 1 dongle
+  if ! iw dev wlan0 interface add awlan0 type __ap; then
+    return 1
+  fi
+  if ! /usr/sbin/batctl if add awlan0; then
+    return 2
+  fi
+  if ! ifup awlan0; then
+    return 3
+  fi
+  if ! iw dev wlan0 interface add awlan1 type __ap; then
+    return 4
+  fi
+  if ! ifup awlan1; then
+    return 5
+  fi
+  /bin/systemctl restart networking.service
+  source /etc/rdbox/network/iptables.mstsimple
+  _simplexmst_ether_common_connect
   sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
   if ! startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf; then
     return 6
@@ -451,9 +469,14 @@ for_simplexmst () {
         ret=$?
       fi
     else
-      # 0 dongle (Ethernet)
-      _simplexmst_ether_common_connect
-      ret=$?
+      if $is_simple_mesh; then
+        # 1 dongle
+        ret=0
+      else
+        # 0 dongle (Ethernet)
+        _simplexmst_ether_common_connect
+        ret=$?
+      fi
     fi
     if [ "$ret" -eq 0 ]; then
       if $is_active_yoursite_wifi; then
@@ -473,9 +496,9 @@ for_simplexmst () {
           # 1 dongle
           _simplexmst_ether_simplemesh_hostapd
           ret=$?
-          #################################
         else
           # 0 dongle (Ethernet)
+          source /etc/rdbox/network/iptables.mstsimple
           sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
           # hostapd #######################
           startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
