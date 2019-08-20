@@ -13,6 +13,21 @@ hname=$(/bin/hostname)
 fname=$(/bin/hostname -f)
 rdbox_type="other"
 is_simple=false
+is_active_yoursite_wifi=false
+
+check_active_yoursite_wifi () {
+  word_count=$(< /etc/rdbox/wpa_supplicant_yoursite.conf sed 's/^[ \t]*//' | grep -E "^psk=.*" | wc -c)
+  word_line=$(< /etc/rdbox/wpa_supplicant_yoursite.conf sed 's/^[ \t]*//' | grep -Ec "^psk=.*")
+  if [ "$word_line" -eq 0 ]; then
+    is_active_yoursite_wifi=false
+    return 0
+  fi
+  counter=$((word_count / word_line))
+  if [ "$counter" -gt 12 ]; then
+    is_active_yoursite_wifi=true
+    return 0
+  fi
+}
 
 echo "$(date) The first session process is start."
 
@@ -302,7 +317,8 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
-  if [[ ! -e /etc/rdbox/wpa_supplicant_yoursite.conf ]]; then
+  check_active_yoursite_wifi
+  if $is_active_yoursite_wifi; then
     sed -i '/wpa_supplicant.pid/d' /lib/systemd/system/rdbox-boot.service
   fi
   /bin/systemctl enable rdbox-boot.service
