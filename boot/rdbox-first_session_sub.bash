@@ -319,6 +319,9 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
   check_active_yoursite_wifi
   if $is_active_yoursite_wifi; then
+    echo "alive monitoring: wpa and hostapd."
+  else
+    echo "alive monitoring: hostapd."
     sed -i '/wpa_supplicant.pid/d' /lib/systemd/system/rdbox-boot.service
   fi
   /bin/systemctl enable rdbox-boot.service
