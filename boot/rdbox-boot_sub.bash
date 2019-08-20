@@ -390,22 +390,6 @@ _simplexmst_wifi_nomesh_hostapd () {
   return 0
 }
 _simplexmst_ether_common_connect () {
-  if ! iw dev wlan0 interface add awlan0 type __ap; then
-    return 1
-  fi
-  if ! /usr/sbin/batctl if add awlan0; then
-    return 2
-  fi
-  if ! ifup awlan0; then
-    return 3
-  fi
-  if ! iw dev wlan0 interface add awlan1 type __ap; then
-    return 4
-  fi
-  if ! ifup awlan1; then
-    return 5
-  fi
-  /bin/systemctl restart networking.service
   source /etc/rdbox/network/iptables.mstsimple
   _ip_count=$(/sbin/ifconfig eth0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
   if [ "$_ip_count" -eq 0 ]; then
