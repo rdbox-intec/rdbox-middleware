@@ -314,8 +314,12 @@ for_slave () {
     pkill -INT -f hostapd
     pkill -INT -f wpa_supplicant
     sleep 10
+    ifup bat0
     # wpa_supplicant ##############
     if connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_be.conf; then
+      /sbin/brctl add br0
+      /sbin/brctl addif br0 bat0
+      ifdown br0 && ifup br0
       # hostapd #######################
       sleep 10
       if startup_hostapd_with_timeout /etc/rdbox/hostapd_be.conf /etc/rdbox/hostapd_ap_an.conf /etc/rdbox/hostapd_ap_bg.conf; then
@@ -418,9 +422,13 @@ _simplexmst_ether_simplemesh_hostapd () {
   /bin/systemctl restart networking.service
   source /etc/rdbox/network/iptables.mstsimple
   _simplexmst_ether_common_connect
+  ret=$?
+  if [ "$ret" -eq 0 ]; then
+    return 6
+  fi
   sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
   if ! startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf; then
-    return 6
+    return 7
   fi
   return 0
 }
@@ -471,6 +479,7 @@ for_simplexmst () {
     else
       if $is_simple_mesh; then
         # 1 dongle
+        #_simplexmst_ether_common_connect
         ret=0
       else
         # 0 dongle (Ethernet)
