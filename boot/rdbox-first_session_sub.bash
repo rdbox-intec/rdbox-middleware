@@ -85,11 +85,11 @@ if [[ $rdbox_type =~ $regex_master ]]; then
     } > /etc/rdbox/network/interfaces.d/current/br0
   fi
   #################################################################
-  ifdown br0 && ifup br0
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
+  ifdown br0 && ifup br0
   /usr/bin/touch /etc/rdbox/hostapd_be.deny
   sed -i "/^#bssid$/c bssid=$(/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl enable rdbox-boot.service
