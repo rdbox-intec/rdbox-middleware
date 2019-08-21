@@ -83,10 +83,9 @@ if [[ $rdbox_type =~ $regex_master ]]; then
       echo "iface br0 inet manual"
       echo "  bridge_ports bat0"
     } > /etc/rdbox/network/interfaces.d/current/br0
-    ifdown br0
-    ifup br0
   fi
   #################################################################
+  ifdown br0 && ifup br0
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
