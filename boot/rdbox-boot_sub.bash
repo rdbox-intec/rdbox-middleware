@@ -314,11 +314,8 @@ for_slave () {
     pkill -INT -f hostapd
     pkill -INT -f wpa_supplicant
     sleep 10
-    ifup bat0
     # wpa_supplicant ##############
     if connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_be.conf; then
-      /sbin/brctl add br0
-      /sbin/brctl addif br0 bat0
       ifdown br0 && ifup br0
       # hostapd #######################
       sleep 10

@@ -119,9 +119,9 @@ if [[ $rdbox_type =~ $regex_master ]]; then
       echo "server=/${arpa_no}.in-addr.arpa/${ip_br0}"
       echo "local=/${fname}/"
       echo "resolv-file=/etc/rdbox/dnsmasq.resolver.conf"
-      echo "dhcp-leasefile=/etc/rdbox/dnsmasq.leases"
+      echo "dhcp-leasefile=/var/lib/rdbox/dnsmasq.leases"
       echo "addn-hosts=/etc/rdbox/dnsmasq.hosts.conf"
-      echo "addn-hosts=/etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf"
+      echo "addn-hosts=/var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf"
       echo "dhcp-range=${dhcp_min_addr},${dhcp_max_addr},${netmask_br0},30d"
       echo "dhcp-option=option:router,${ip_br0}"
       echo "dhcp-option=option:dns-server,${ip_br0}"
@@ -134,7 +134,6 @@ if [[ $rdbox_type =~ $regex_master ]]; then
       echo "${k8svpn_addr} rdbox-k8s-vpn rdbox-k8s-vpn.${fname}"
     } > /etc/rdbox/dnsmasq.hosts.conf
     touch /etc/rdbox/dnsmasq.resolver.conf
-    touch /etc/rdbox/dnsmasq.resolver.conf
     dns_ip_list=$(< /etc/rdbox/network/interfaces.d/current/br0 grep dns-nameservers | awk '{$1="";print}')
     for line in $dns_ip_list
     do
@@ -143,7 +142,7 @@ if [[ $rdbox_type =~ $regex_master ]]; then
       fi
       echo "nameserver $line " >> hoge
     done
-    touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
+    touch /var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf
     /bin/systemctl enable dnsmasq.service
     /bin/systemctl restart dnsmasq.service
   fi
@@ -256,9 +255,9 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
       echo "server=/${arpa_no}.in-addr.arpa/${ip_br0}"
       echo "local=/${fname}/"
       echo "resolv-file=/etc/rdbox/dnsmasq.resolver.conf"
-      echo "dhcp-leasefile=/etc/rdbox/dnsmasq.leases"
+      echo "dhcp-leasefile=/var/lib/rdbox/dnsmasq.leases"
       echo "addn-hosts=/etc/rdbox/dnsmasq.hosts.conf"
-      echo "addn-hosts=/etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf"
+      echo "addn-hosts=/var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf"
       echo "dhcp-range=${dhcp_min_addr},${dhcp_max_addr},${netmask_br0},30d"
       echo "dhcp-option=option:router,${ip_br0}"
       echo "dhcp-option=option:dns-server,${ip_br0}"
@@ -279,7 +278,7 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
       fi
       echo "nameserver $line " >> hoge
     done
-    touch /etc/rdbox/dnsmasq.k8s_external_svc.hosts.conf
+    touch /var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf
     /bin/systemctl enable dnsmasq.service
     /bin/systemctl restart dnsmasq.service
     #################################################################
