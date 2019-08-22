@@ -3,11 +3,11 @@
 
 import rdbox.config
 import socket
-from socket import gethostname
 
-from logging import getLogger, StreamHandler, Formatter
+from logging import getLogger
 r_logger = getLogger('rdbox_cli')
 r_print = getLogger('rdbox_cli').getChild("stdout")
+
 
 class ClassifierForEnableDisableCommand(object):
 
@@ -26,7 +26,8 @@ class ClassifierForEnableDisableCommand(object):
             return False
         master_hostname = rdbox.config.get("rdbox", "master_hostname")
         if socket.gethostname() != master_hostname:
-            r_print.error("This command can be executed only on the %s" % master_hostname)
+            r_print.error(
+                "This command can be executed only on the %s" % master_hostname)
             return False
         return True
 

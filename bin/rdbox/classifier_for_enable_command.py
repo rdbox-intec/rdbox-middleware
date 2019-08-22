@@ -6,17 +6,19 @@ from rdbox.crontab_control import CrontabControl
 from rdbox.helm_control import HelmControl
 from rdbox.ansible_control import AnsibleControl
 
-from logging import getLogger, StreamHandler, Formatter
+from logging import getLogger
 r_logger = getLogger('rdbox_cli')
 r_print = getLogger('rdbox_cli').getChild("stdout")
+
 
 class ClassifierForEnableCommand(ClassifierForEnableDisableCommand):
 
     # crontab format
     # [SCHEDULE, COMMAND, COMMENTS]
     SETTINGS_FUNCTYPES = [
-                          ["* * * * *", "/usr/bin/sudo /usr/bin/python3 /opt/rdbox/bin/rdbox_cli hidden hosts_for_k8s_external_svc >/dev/null 2>&1", ClassifierForEnableDisableCommand.FUNCTYPES_LIST[0]]
-                         ]
+        ["* * * * *", "/usr/bin/sudo /usr/bin/python3 /opt/rdbox/bin/rdbox_cli hidden hosts_for_k8s_external_svc >/dev/null 2>&1",
+            ClassifierForEnableDisableCommand.FUNCTYPES_LIST[0]]
+    ]
 
     @classmethod
     def execute(cls, args):
@@ -35,7 +37,8 @@ class ClassifierForEnableCommand(ClassifierForEnableDisableCommand):
                 return False
         elif args.function_type == cls.FUNCTYPES_LIST[1]:
             ret = -1
-            cache_url = helm.get_docker_registry_ingress_hosts_all(helm_chart_name, args)
+            cache_url = helm.get_docker_registry_ingress_hosts_all(
+                helm_chart_name, args)
             if cache_url != "":
                 ac = AnsibleControl()
                 ret = ac.playbook_dockerconfig_enable_all(cache_url)
@@ -48,13 +51,15 @@ class ClassifierForEnableCommand(ClassifierForEnableDisableCommand):
         #############
         print("Finish!!")
         return True
-        
+
     @classmethod
     def _print_complete_message(cls, cache_url):
         r_print.info('###### INFO ######')
-        r_print.info('All processing is completed. It takes a few minutes to reflect the network settings.')
+        r_print.info(
+            'All processing is completed. It takes a few minutes to reflect the network settings.')
         r_print.info('')
-        r_print.info('Test Operation: If the response is "{"repositories": []}",')
+        r_print.info(
+            'Test Operation: If the response is "{"repositories": []}",')
         r_print.info('it is successful!!')
         r_print.info('$ curl {cache_url}'.format(cache_url=cache_url))
         r_print.info('{"repositories": []}')

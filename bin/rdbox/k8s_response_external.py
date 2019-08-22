@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
+
 class K8sResponseExternal(object):
     def __init__(self, org_response, hostname, ip, location):
         self.org_response = org_response

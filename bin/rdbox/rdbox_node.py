@@ -19,4 +19,3 @@ class RdboxNode(object):
 
     def get_location(self):
         return self.location
-

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
-import os
 from rdbox.k8s_client import K8sClient
 from rdbox.input_data_list import InputDataList
+
 
 class K8sClientList(object):
 

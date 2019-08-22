@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # coding: utf-8
 
+
 class K8sResponseHelper(object):
 
     LOCATION_NOT_DEFINE = "NOT_DEFINE"
@@ -30,4 +31,3 @@ class K8sResponseHelper(object):
         :return: list[K8sResponseExternal]
         """
         assert False
-        

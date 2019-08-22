@@ -25,7 +25,7 @@ cidr_ip () {
   IFS=/ read -r ip _ <<EOF
 $1
 EOF
-  echo $ip
+  echo "$ip"
 }
 
 # returns the prefix part of an CIDR
@@ -33,7 +33,7 @@ cidr_prefix () {
   IFS=/ read -r _ prefix <<EOF
 $1
 EOF
-  echo $prefix
+  echo "$prefix"
 }
 
 # returns net mask in numberic from prefix size
@@ -43,34 +43,44 @@ netmask_of_prefix () {
 
 # returns default gateway address (network address + 1) from CIDR
 cidr_default_gw () {
-  local ip=$(ip4_to_int $(cidr_ip $1))
-  local prefix=$(cidr_prefix $1)
-  local netmask=$(netmask_of_prefix $prefix)
-  local gw=$((ip & netmask + 1))
+  local ip
+  local prefix
+  local netmask
+  local gw
+  ip=$(ip4_to_int "$(cidr_ip "$1")")
+  prefix=$(cidr_prefix "$1")
+  netmask=$(netmask_of_prefix "$prefix")
+  gw=$((ip & netmask + 1))
   int_to_ip4 $gw
 }
 
 # returns default gateway address (broadcast address - 1) from CIDR
 cidr_default_gw_2 () {
-  local ip=$(ip4_to_int $(cidr_ip $1))
-  local prefix=$(cidr_prefix $1)
-  local netmask=$(netmask_of_prefix $prefix)
-  local broadcast=$(((4294967295 - netmask) | ip))
+  local ip
+  local prefix
+  local netmask
+  local broadcast
+  ip=$(ip4_to_int "$(cidr_ip "$1")")
+  prefix=$(cidr_prefix "$1")
+  netmask=$(netmask_of_prefix "$prefix")
+  broadcast=$(((4294967295 - netmask) | ip))
   int_to_ip4 $((broadcast - 1))
 }
 
 in-addr_arpa () {
   local ans=0
-  local cir=$(cidr_prefix $1)
-  local fst=$(cidr_default_gw $1)
-  if [ $cir -ge 1 ] && [ $cir -lt 8 ]; then
+  local cir
+  local fst
+  cir=$(cidr_prefix "$1")
+  fst=$(cidr_default_gw "$1")
+  if [ "$cir" -ge 1 ] && [ "$cir" -lt 8 ]; then
     ans=0
-  elif [ $cir -ge 8 ] && [ $cir -lt 16 ]; then
-    ans=`echo $fst | awk -F'[.]' '{printf "%s",$1}'`
-  elif [ $cir -ge 16 ] && [ $cir -lt 24 ]; then
-    ans=`echo $fst | awk -F'[.]' '{printf "%s.%s",$2,$1}'`
-  elif [ $cir -ge 24 ] && [ $cir -lt 32 ]; then
-    ans=`echo $fst | awk -F'[.]' '{printf "%s.%s.%s",$3,$2,$1}'`
+  elif [ "$cir" -ge 8 ] && [ "$cir" -lt 16 ]; then
+    ans=$(echo "$fst" | awk -F'[.]' '{printf "%s",$1}')
+  elif [ "$cir" -ge 16 ] && [ "$cir" -lt 24 ]; then
+    ans=$(echo "$fst" | awk -F'[.]' '{printf "%s.%s",$2,$1}')
+  elif [ "$cir" -ge 24 ] && [ "$cir" -lt 32 ]; then
+    ans=$(echo "$fst" | awk -F'[.]' '{printf "%s.%s.%s",$3,$2,$1}')
   else
     ans=0
   fi
@@ -78,18 +88,21 @@ in-addr_arpa () {
 }
 
 iplist () {
-  local num=$(ip4_to_int $(cidr_ip $1))
-  local max=$(($num + $2 - 1))
+  local num
+  local max
+  num=$(ip4_to_int "$(cidr_ip "$1")")
+  max=$(("$num" + $2 - 1))
 
   while :
   do
-    int_to_ip4 $num
-    [[ $num == $max ]] && break || num=$(($num+1))
+    int_to_ip4 "$num"
+    [[ "$num" == "$max" ]] && break || num=$(("$num"+1))
   done
+  echo ""
 }
 
 ipmax() {
-  local iplst=$(iplist $1 $2)
-  local max=`echo $iplst | awk '{print $NF}'`
-  echo $max
+  local max
+  max=$(iplist "$1" "$2" | tr '\n' ' ' | awk '{print $NF}')
+  echo "$max"
 }

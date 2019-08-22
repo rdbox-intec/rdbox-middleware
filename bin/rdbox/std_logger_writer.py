@@ -3,6 +3,7 @@
 
 import sys
 
+
 class StdLoggerWriter:
     def __init__(self, level):
         # self.level is really like using log.debug(message)

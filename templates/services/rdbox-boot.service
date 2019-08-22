@@ -10,8 +10,8 @@ ExecStop=/bin/bash /opt/rdbox/boot/rdbox-boot.bash stop
 TimeoutSec=0
 RemainAfterExit=yes
 SysVStartPriority=99
-PIDFile=/var/run/hostapd.pid
-PIDFile=/var/run/wpa_supplicant.pid
+PIDFile=/run/hostapd.pid
+PIDFile=/run/wpa_supplicant.pid
 Restart=on-failure
 
 [Install]

@@ -1,0 +1,3 @@
+auto awlan1
+allow-hotplug awlan1
+iface awlan1 inet manual
