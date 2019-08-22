@@ -1,5 +1,7 @@
 # rdbox_middleware
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/83414aa80f9f41a28a7ae73a50b67e13)](https://app.codacy.com/app/fukuta-tatsuya-intec/rdbox-middleware_2?utm_source=github.com&utm_medium=referral&utm_content=rdbox-intec/rdbox-middleware&utm_campaign=Badge_Grade_Dashboard)
+
 ## About rdbox_middleware
 
 `rdbox_middleware` is a middleware for RDBOX. It can be classified roughly into three roles.
