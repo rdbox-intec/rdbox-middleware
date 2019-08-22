@@ -420,7 +420,7 @@ _simplexmst_ether_simplemesh_hostapd () {
   source /etc/rdbox/network/iptables.mstsimple
   _simplexmst_ether_common_connect
   ret=$?
-  if [ "$ret" -eq 0 ]; then
+  if [ "$ret" -gt 0 ]; then
     return 6
   fi
   sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
