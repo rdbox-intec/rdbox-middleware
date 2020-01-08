@@ -14,15 +14,15 @@ iptables -A OUTPUT -o lo -j ACCEPT
 ###########
 #mesh wifi
 ###########
-iptables -A INPUT -i wlan10 -j ACCEPT
+iptables -A INPUT -i wlan0 -j ACCEPT
 iptables -A INPUT -i awlan0 -j ACCEPT
 
-iptables -A FORWARD --match physdev --physdev-in wlan10 --physdev-is-bridged --physdev-out tap_tap0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in tap_tap0 --physdev-is-bridged --physdev-out wlan10 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in wlan10 --physdev-is-bridged --physdev-out tap_br0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in tap_br0 --physdev-is-bridged --physdev-out wlan10 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in wlan10 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out wlan10 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan0 --physdev-is-bridged --physdev-out tap_tap0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in tap_tap0 --physdev-is-bridged --physdev-out wlan0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan0 --physdev-is-bridged --physdev-out tap_br0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in tap_br0 --physdev-is-bridged --physdev-out wlan0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in wlan0 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out wlan0 -j ACCEPT
 iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out tap_tap0 -j ACCEPT
 iptables -A FORWARD --match physdev --physdev-in tap_tap0 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
 iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out tap_br0 -j ACCEPT

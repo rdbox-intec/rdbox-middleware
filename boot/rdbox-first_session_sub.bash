@@ -91,7 +91,7 @@ if [[ $rdbox_type =~ $regex_master ]]; then
   /bin/systemctl start sshd.service
   ifdown br0 && ifup br0
   /usr/bin/touch /etc/rdbox/hostapd_be.deny
-  sed -i "/^#bssid$/c bssid=$(/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')" /etc/rdbox/wpa_supplicant_be.conf
+  sed -i "/^#bssid$/c bssid=$(/sbin/ifconfig wlan2 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
   # DNS
@@ -109,7 +109,7 @@ if [[ $rdbox_type =~ $regex_master ]]; then
     k8svpn_addr=$(ipmax "$(cidr_default_gw "$ip_br0_with_cidr")" 3)
     # config dnsmqsq
     {
-      echo "no-dhcp-interface=eth0,wlan0,wlan1,wlan2,wlan3"
+      echo "no-dhcp-interface=eth0,wlan1,wlan2,wlan3,wlan4"
       echo "listen-address=127.0.0.1,${ip_br0}"
       echo "interface=br0"
       echo "domain=${fname}"
@@ -174,8 +174,8 @@ elif [[ $rdbox_type =~ $regex_slave ]]; then
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -f /etc/rdbox/network/interfaces.d/slave/* /etc/rdbox/network/interfaces.d/current
-  /sbin/ifconfig wlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
-  sed -i "/^#bssid_blacklist$/c bssid_blacklist=$(/sbin/ifconfig wlan1 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')" /etc/rdbox/wpa_supplicant_be.conf
+  /sbin/ifconfig wlan2 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
+  sed -i "/^#bssid_blacklist$/c bssid_blacklist=$(/sbin/ifconfig wlan2 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
@@ -199,8 +199,8 @@ elif [[ $rdbox_type =~ $regex_vpnbridge ]]; then
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
-  /sbin/ifup wlan10
-  /sbin/dhclient wlan10 
+  /sbin/ifup wlan0
+  /sbin/dhclient wlan0 
   #/sbin/ip addr del "$(ip -f inet -o addr show eth0 | cut -d\  -f 7 | cut -d/ -f 1)"/24 dev eth0
   /bin/systemctl enable softether-vpnbridge.service
   /bin/systemctl restart softether-vpnbridge.service
@@ -245,7 +245,7 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
     k8svpn_addr=$(ipmax "$(cidr_default_gw "$ip_br0_with_cidr")" 3)
     # config dnsmqsq
     {
-      echo "no-dhcp-interface=eth0,wlan10"
+      echo "no-dhcp-interface=eth0,wlan0"
       echo "listen-address=127.0.0.1,${ip_br0}"
       echo "interface=br0"
       echo "domain=${fname}"
@@ -337,7 +337,7 @@ elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -f /etc/rdbox/network/interfaces.d/simplexslv/* /etc/rdbox/network/interfaces.d/current
-  /sbin/ifconfig wlan10 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
+  /sbin/ifconfig wlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
   sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_ap_bg.conf
@@ -370,8 +370,8 @@ else
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
-  /sbin/ifup wlan10
-  /sbin/dhclient wlan10
+  /sbin/ifup wlan0
+  /sbin/dhclient wlan0
   systemctl enable ntp.service
   systemctl restart ntp.service
   sleep 30

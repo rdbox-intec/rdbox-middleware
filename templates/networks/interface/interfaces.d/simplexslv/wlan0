@@ -1,0 +1,5 @@
+auto wlan0
+allow-hotplug wlan0
+iface wlan0 inet manual
+wireless-power off
+  post-up /usr/sbin/batctl if add wlan0

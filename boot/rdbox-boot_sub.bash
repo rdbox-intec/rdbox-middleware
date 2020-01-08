@@ -154,8 +154,8 @@ check_device_full () {
     echo "Device named 'wlan3' not found."
     return 8
   fi
-  if ! iwconfig wlan10 > /dev/null 2>&1; then
-    echo "Device named 'wlan10' not found."
+  if ! iwconfig wlan4 > /dev/null 2>&1; then
+    echo "Device named 'wlan4' not found."
     return 8
   fi
   return 0
@@ -166,12 +166,12 @@ check_device_simple () {
     echo "Device named 'eth0' not found."
     return 8
   fi
-  if ! iwconfig wlan10 > /dev/null 2>&1; then
-    echo "Device named 'wlan10' not found. (Error.....)"
+  if ! iwconfig wlan0 > /dev/null 2>&1; then
+    echo "Device named 'wlan0' not found. (Error.....)"
     return 8
   fi
-  if ! iwconfig wlan0 > /dev/null 2>&1; then
-    echo "Device named 'wlan0' not found. (Start with 0 Dongle Mode.)"
+  if ! iwconfig wlan1 > /dev/null 2>&1; then
+    echo "Device named 'wlan1' not found. (Start with 0 Dongle Mode.)"
     echo "disable simple mesh"
     is_simple_mesh=false
   else
@@ -253,7 +253,7 @@ startup_hostapd_with_timeout () {
 
 generate_MACAddress () {
   _eth0_addr=$(cat "$(find /sys/devices/platform -name eth0 2>/dev/null)"/address)
-  _wlan_addr=$(cat "$(find /sys/devices/platform -name wlan10 2>/dev/null)"/address)
+  _wlan_addr=$(cat "$(find /sys/devices/platform -name wlan0 2>/dev/null)"/address)
   _tmp_addr=$(echo $RANDOM | openssl md5 | sed 's/\(..\)/\1:/g' | cut -b16-23 | sed 's/^/b8:27:eb:/')
   while true; do
     _tmp_addr=$(echo $RANDOM | openssl md5 | sed 's/\(..\)/\1:/g' | cut -b16-23 | sed 's/^/b8:27:eb:/')
@@ -283,7 +283,7 @@ for_master () {
     if startup_hostapd_with_timeout /etc/rdbox/hostapd_be.conf /etc/rdbox/hostapd_ap_an.conf /etc/rdbox/hostapd_ap_bg.conf; then
       # wpa_supplicant ##############
       sleep 10
-      if connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_be.conf; then
+      if connect_wifi_with_timeout -i wlan1 -c /etc/rdbox/wpa_supplicant_be.conf; then
         break
       fi
       sleep 10
@@ -315,7 +315,7 @@ for_slave () {
     pkill -INT -f wpa_supplicant
     sleep 10
     # wpa_supplicant ##############
-    if connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_be.conf; then
+    if connect_wifi_with_timeout -i wlan1 -c /etc/rdbox/wpa_supplicant_be.conf; then
       ifdown br0 && ifup br0
       # hostapd #######################
       sleep 10
@@ -343,7 +343,7 @@ for_slave () {
 
 _simplexmst_wifi_simplemesh_wpa () {
   # 1 dongle
-  if ! iw dev wlan0 interface add awlan0 type __ap; then
+  if ! iw dev wlan1 interface add awlan0 type __ap; then
     return 1
   fi
   if ! /usr/sbin/batctl if add awlan0; then
@@ -352,18 +352,18 @@ _simplexmst_wifi_simplemesh_wpa () {
   if ! ifup awlan0; then
     return 3
   fi
-  if ! iw dev wlan0 interface add awlan1 type __ap; then
+  if ! iw dev wlan1 interface add awlan1 type __ap; then
     return 4
   fi
   if ! ifup awlan1; then
     return 5
   fi
   /bin/systemctl restart networking.service
-  source /etc/rdbox/network/iptables.mstsimple.wlan10
-  if ! connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
+  source /etc/rdbox/network/iptables.mstsimple.wlan0
+  if ! connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
     return 6
   fi
-  if ! wait_dhclient wlan10; then
+  if ! wait_dhclient wlan0; then
     return 7
   fi
   return 0
@@ -371,7 +371,7 @@ _simplexmst_wifi_simplemesh_wpa () {
 
 _simplexmst_wifi_nomesh_hostapd () {
   # 0 dongle (Wi-Fi)
-  if ! iw dev wlan10 interface add awlan1 type __ap; then
+  if ! iw dev wlan0 interface add awlan1 type __ap; then
     return 1
   fi
   _mac_addr=$(generate_MACAddress)
@@ -384,7 +384,7 @@ _simplexmst_wifi_nomesh_hostapd () {
   fi
   sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^bridge\=/c\#bridge\=br0' /etc/rdbox/hostapd_ap_bg.conf
-  source /etc/rdbox/network/iptables.mstsimple.wlan10
+  source /etc/rdbox/network/iptables.mstsimple.wlan0
   if ! startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf; then
     return 4
   fi
@@ -401,7 +401,7 @@ _simplexmst_ether_common_connect () {
 }
 _simplexmst_ether_simplemesh_hostapd () {
   # 1 dongle
-  if ! iw dev wlan0 interface add awlan0 type __ap; then
+  if ! iw dev wlan1 interface add awlan0 type __ap; then
     return 1
   fi
   if ! /usr/sbin/batctl if add awlan0; then
@@ -410,7 +410,7 @@ _simplexmst_ether_simplemesh_hostapd () {
   if ! ifup awlan0; then
     return 3
   fi
-  if ! iw dev wlan0 interface add awlan1 type __ap; then
+  if ! iw dev wlan1 interface add awlan1 type __ap; then
     return 4
   fi
   if ! ifup awlan1; then
@@ -423,7 +423,7 @@ _simplexmst_ether_simplemesh_hostapd () {
   if [ "$ret" -gt 0 ]; then
     return 6
   fi
-  sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
+  sed -i -e '/^interface\=/c\interface\=wlan0' /etc/rdbox/hostapd_ap_bg.conf
   if ! startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf; then
     return 7
   fi
@@ -432,10 +432,10 @@ _simplexmst_ether_simplemesh_hostapd () {
 
 _simplexmst_wifi_nomesh_wpa () {
   # 0 dongle (Wi-Fi)
-  if ! connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
+  if ! connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
     return 1
   fi
-  if ! wait_dhclient wlan10; then
+  if ! wait_dhclient wlan0; then
     return 2
   fi
   sleep 30
@@ -505,7 +505,7 @@ for_simplexmst () {
         else
           # 0 dongle (Ethernet)
           source /etc/rdbox/network/iptables.mstsimple
-          sed -i -e '/^interface\=/c\interface\=wlan10' /etc/rdbox/hostapd_ap_bg.conf
+          sed -i -e '/^interface\=/c\interface\=wlan0' /etc/rdbox/hostapd_ap_bg.conf
           # hostapd #######################
           startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
           ret=$?
@@ -555,7 +555,7 @@ for_simplexslv () {
     pkill -INT -f wpa_supplicant
     sleep 10
     # wpa_supplicant ##############
-    if connect_wifi_with_timeout -i wlan10 -c /etc/rdbox/wpa_supplicant_be.conf; then
+    if connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_be.conf; then
       # hostapd #######################
       sleep 10
       if startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/hostapd_be.conf; then

@@ -1,3 +1,5 @@
 auto wlan2
 allow-hotplug wlan2
 iface wlan2 inet manual
+  pre-up /sbin/ifconfig wlan2 mtu 1532
+  post-up /usr/sbin/batctl if add wlan2

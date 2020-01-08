@@ -1,4 +1,0 @@
-auto wlan10
-allow-hotplug wlan10
-iface wlan10 inet manual
-wireless-power off

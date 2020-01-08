@@ -1,0 +1,3 @@
+auto wlan4
+allow-hotplug wlan4
+iface wlan4 inet manual

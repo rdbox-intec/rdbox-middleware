@@ -1,12 +1,15 @@
 #!/bin/bash
 
-if [ $# != 1 ]; then
+if [ $# != 2 ]; then
   echo "Invalid Argment."
-  echo "You need to specify the version number. (like 0.0.1)"
+  echo " You need to specify the version number. (like 0.0.1)"
+  echo " You need to specify Architect. (like armhf, amd64)"
   exit 1
 fi
 
 version_no=$1
+architect_code=$2
+git pull origin master
 git checkout master
 commit_id=$(git rev-parse HEAD)
 git archive --format=tar.gz --prefix=rdbox/ -o ../rdbox_"${version_no}".orig.tar.gz "${commit_id}"
@@ -25,4 +28,10 @@ rm -rf ../build-area/
 gbp buildpackage --git-pristine-tar-commit --git-export-dir=../build-area -S -sd
 
 # need sudo
-sudo OS=raspbian DIST=buster ARCH=armhf pbuilder --build ../build-area/rdbox_"${version_no}".dsc
+if [ $architect_code = "armhf" ]; then
+  sudo OS=raspbian DIST=buster ARCH=armhf pbuilder --build ../build-area/rdbox_"${version_no}".dsc
+elif [ $architect_code = "amd64" ]; then
+  sudo OS=debian DIST=buster ARCH=amd64 pbuilder --build ../build-area/rdbox_"${version_no}".dsc
+else
+  sudo OS=raspbian DIST=buster ARCH=armhf pbuilder --build ../build-area/rdbox_"${version_no}".dsc
+fi

@@ -1,5 +1,5 @@
 auto awlan0
 allow-hotplug awlan0
 iface awlan0 inet manual
-  pre-up iw dev wlan0 interface add awlan0 type __ap
+  pre-up iw dev wlan1 interface add awlan0 type __ap
   post-up /usr/sbin/batctl if add awlan0
