@@ -48,9 +48,8 @@ def main():
         print(append_cmd)
         subprocess.call(append_cmd, shell=True)
     for i, row in enumerate(datas):
-        i = i + 1
         if len(datas) == 4:
-            port = row[0].split(":")[0][:-2] + ".%s" % str(i)
+            port = row[0].split(":")[0][:-2] + ".%s" % str(4 - i)
         else:
             port = row[0].split(":")[0]
         cmd = 'echo -n "%s" > /sys/bus/usb/drivers/usb/bind' % port
