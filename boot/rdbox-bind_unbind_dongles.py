@@ -41,7 +41,7 @@ def main():
     rules = ""
     for index, addr in mac_dict.items():
         rule = 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="%s", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="wlan%s"' \
-            % (addr, index - 1)
+            % (addr, index)
         rules = rules + rule + '\n'
     if rules != "":
         append_cmd = "echo '%s' >> /etc/udev/rules.d/70-persistent-net.rules" % rules
