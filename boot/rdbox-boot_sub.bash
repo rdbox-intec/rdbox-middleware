@@ -138,10 +138,6 @@ check_device_full () {
     echo "Device named 'eth0' not found."
     return 8
   fi
-  if ! iwconfig wlan0 > /dev/null 2>&1; then
-    echo "Device named 'wlan0' not found."
-    return 8
-  fi
   if ! iwconfig wlan1 > /dev/null 2>&1; then
     echo "Device named 'wlan1' not found."
     return 8
