@@ -354,6 +354,15 @@ elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
   /sbin/dhclient br0
+  if [ "$(/sbin/ip -f inet -o addr show wlan0 | cut -d\  -f 7 | cut -d/ -f 1 | wc -l)" -gt  0] ; then
+    /sbin/dhclient br0
+  fi
+  sleep 10
+  if [ ! -s "/etc/resolv.conf" ]; then
+    unlink /etc/resolv.conf || :
+    rm -rf /etc/resolv.conf || :
+    ln -s /etc/resolvconf/run/resolv.conf /etc/resolv.conf
+  fi
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
   sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
@@ -371,7 +380,15 @@ else
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
   /sbin/ifup wlan0
-  /sbin/dhclient wlan0
+  if [ "$(/sbin/ip -f inet -o addr show wlan0 | cut -d\  -f 7 | cut -d/ -f 1 | wc -l)" -gt  0] ; then
+    /sbin/dhclient wlan0
+  fi
+  sleep 10
+  if [ ! -s "/etc/resolv.conf" ]; then
+    unlink /etc/resolv.conf || :
+    rm -rf /etc/resolv.conf || :
+    ln -s /etc/resolvconf/run/resolv.conf /etc/resolv.conf
+  fi
   systemctl enable ntp.service
   systemctl restart ntp.service
   sleep 30
