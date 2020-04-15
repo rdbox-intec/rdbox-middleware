@@ -61,7 +61,7 @@ class DnsK8sExternalSvc(object):
         try:
             f = open(file_name, "r")
             lines = f.read()
-        except FileNotFoundError:
+        except IOError:
             lines = ""
         finally:
             if f:

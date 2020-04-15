@@ -50,7 +50,10 @@ class AnsibleControl(object):
         return self._common_playbook(playbook_name, tags, extra_vars)
 
     def _common_playbook(self, playbook_name, tags_set, extra_vars_dict):
-        user = os.environ['SUDO_USER'] if 'SUDO_USER' in os.environ else os.environ['USER']
+        if 'SUDO_USER' in os.environ:
+            user = os.environ['SUDO_USER']
+        else:
+            user = os.environ['USER']
         keyfile_path = "/home/{user}/.ssh/id_rsa".format(user=user)
         ret = self.playbook_all(playbook_name, list(
             tags_set), extra_vars_dict, keyfile_path)
@@ -59,7 +62,8 @@ class AnsibleControl(object):
         else:
             return False
 
-    def playbook_all(self, playbook_name, tags_set, extra_vars_dict, keyfile_path):
+    def playbook_all(self, playbook_name, tags_set, extra_vars_dict,
+                     keyfile_path):
         ret = -1
         playbook_path = self._preinstall_playbook_path_builder(playbook_name)
         r_print.debug(playbook_path)
@@ -73,15 +77,55 @@ class AnsibleControl(object):
                 loader=loader, inventory=inventory)
             variable_manager.extra_vars = extra_vars_dict
             if not os.path.exists(playbook_path):
-                raise FileNotFoundError(
+                raise IOError(
                     errno.ENOENT, os.strerror(errno.ENOENT), playbook_path)
-            Options = namedtuple('Options', ['listtags', 'listtasks', 'listhosts', 'syntax', 'connection', 'module_path', 'forks', 'remote_user', 'private_key_file',
-                                             'ssh_common_args', 'ssh_extra_args', 'sftp_extra_args', 'scp_extra_args', 'become', 'become_method', 'become_user', 'verbosity', 'check', 'diff', 'tags'])
-            options = Options(listtags=False, listtasks=False, listhosts=False, syntax=False, connection='smart', module_path=None, forks=5, remote_user=None, private_key_file=keyfile_path, ssh_common_args=None,
-                              ssh_extra_args=None, sftp_extra_args=None, scp_extra_args=None, become=True, become_method='sudo', become_user='root', verbosity=None, check=False, diff=False, tags=tags_set)
+            Options = namedtuple('Options', ['listtags',
+                                             'listtasks',
+                                             'listhosts',
+                                             'syntax',
+                                             'connection',
+                                             'module_path',
+                                             'forks',
+                                             'remote_user',
+                                             'private_key_file',
+                                             'ssh_common_args',
+                                             'ssh_extra_args',
+                                             'sftp_extra_args',
+                                             'scp_extra_args',
+                                             'become',
+                                             'become_method',
+                                             'become_user',
+                                             'verbosity',
+                                             'check',
+                                             'diff',
+                                             'tags'])
+            options = Options(listtags=False,
+                              listtasks=False,
+                              listhosts=False,
+                              syntax=False,
+                              connection='smart',
+                              module_path=None,
+                              forks=5,
+                              remote_user=None,
+                              private_key_file=keyfile_path,
+                              ssh_common_args=None,
+                              ssh_extra_args=None,
+                              sftp_extra_args=None,
+                              scp_extra_args=None,
+                              become=True,
+                              become_method='sudo',
+                              become_user='root',
+                              verbosity=None,
+                              check=False,
+                              diff=False,
+                              tags=tags_set)
             passwords = {}
-            pbex = PlaybookExecutor(playbooks=[playbook_path], inventory=inventory,
-                                    variable_manager=variable_manager, loader=loader, options=options, passwords=passwords)
+            pbex = PlaybookExecutor(playbooks=[playbook_path],
+                                    inventory=inventory,
+                                    variable_manager=variable_manager,
+                                    loader=loader,
+                                    options=options,
+                                    passwords=passwords)
             # redirect
             bak_stdout = sys.stdout
             bak_stderr = sys.stderr

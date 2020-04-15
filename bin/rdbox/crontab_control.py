@@ -58,7 +58,7 @@ class CrontabControl(object):
         if self.job is None:
             try:
                 self.read_jobs()
-            except FileNotFoundError:
+            except IOError:
                 return False
         iter = self.cron.find_comment(comment)
         tmp = []

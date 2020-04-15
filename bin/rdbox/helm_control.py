@@ -78,7 +78,7 @@ class HelmControl(object):
             try:
                 values_path = os.path.join(chart_path, "values.yaml")
                 f = open(values_path, "r")
-                data = yaml.load(f)
+                data = yaml.safe_load(f)
                 cache_url = "https://" + \
                     data.get("docker-registry").get("ingress").get("hosts")[0]
             except Exception:

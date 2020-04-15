@@ -14,7 +14,13 @@ from rdbox.etchosts_rdbox_node_formatter import EtchostsRdboxNodeFormatter
 
 
 class GetCommand(object):
-    def __init__(self, intermediate_data, final_data, report_data, collect_input_data_algorithm, convert_intermediate_data_algorithm, convert_report_data_algorithm):
+    def __init__(self,
+                 intermediate_data,
+                 final_data,
+                 report_data,
+                 collect_input_data_algorithm,
+                 convert_intermediate_data_algorithm,
+                 convert_report_data_algorithm):
         self.intermediate_data = intermediate_data
         self.final_data = final_data
         self.report_data = report_data
@@ -60,7 +66,7 @@ class GetCommandBuilder(object):
         self.convert_report_data_algorithm = convert_report_data_algorithm
 
     def setting(self):
-        assert False
+        raise(IOError)
 
     def build(self, format_type):
         self.setting()
@@ -69,7 +75,12 @@ class GetCommandBuilder(object):
             self.convert_report_data_algorithm = AnsibleRdboxNodeFormatter()
         elif format_type == ClassifierForGetCommand.FORMAT_LIST[2]:
             self.convert_report_data_algorithm = EtchostsRdboxNodeFormatter()
-        return GetCommand(self.intermediate_data, self.final_data, self.report_data, self.collect_input_data_algorithm, self.convert_intermediate_data_algorithm, self.convert_report_data_algorithm)
+        return GetCommand(self.intermediate_data,
+                          self.final_data,
+                          self.report_data,
+                          self.collect_input_data_algorithm,
+                          self.convert_intermediate_data_algorithm,
+                          self.convert_report_data_algorithm)
 
 
 class GetCommandNode(GetCommandBuilder):
