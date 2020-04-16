@@ -165,10 +165,15 @@ class HelmControl(object):
             path = "/home/{user}/.kube/config".format(user=user)
         return path
 
-    def _kwargs_to_command(self, external_flag_list=[], **kwargs):
+    def _kwargs_to_command(self, external_flag_list=None, **kwargs):
+        exlist = []
+        if external_flag_list is None:
+            exlist = []
+        else:
+            exlist = external_flag_list
         command = ""
         for key, value in kwargs:
-            if key in external_flag_list:
+            if key in exlist:
                 command += "--{key} {value}".format(key=key, value=value)
                 command += " "
                 continue

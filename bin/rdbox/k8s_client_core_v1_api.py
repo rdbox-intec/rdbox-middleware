@@ -6,7 +6,11 @@ from kubernetes import client, config
 
 
 class K8sClientCoreV1Api(K8sClient):
-    def __init__(self, method_name, opt={}):
+    def __init__(self, method_name, opt=None):
+        if opt is None:
+            self.opt = {}
+        else:
+            self.opt = opt
         self.method_name = method_name
         self.opt = opt
 
