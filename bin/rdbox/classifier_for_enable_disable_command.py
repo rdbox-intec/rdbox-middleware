@@ -17,8 +17,8 @@ class ClassifierForEnableDisableCommand(object):
     HELMTYPES_LIST = HELMTYPES.split("|")
     FUNC_HELM_MAPPING = {}
     
-    for i in range(len(FUNCTYPES_LIST)):
-        FUNC_HELM_MAPPING[FUNCTYPES_LIST[i]] = HELMTYPES_LIST[i]
+    for index, _ in enumerate(FUNCTYPES_LIST):
+        FUNC_HELM_MAPPING[FUNCTYPES_LIST[index]] = HELMTYPES_LIST[index]
 
     @classmethod
     def _validation(cls, function_type):
