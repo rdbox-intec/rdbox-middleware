@@ -49,10 +49,13 @@ In this document, we run the initial process for using rdbox_cli and some of the
 #### Setup (only run for the first time)
 
 1.  Ensure that login RDBOX(Master) by ssh.
+
     ```bash
     $ ssh ubuntu@rdbox-master-00
     ```
+
 2.  Initialize rdbox_cli. It will be successful if the terminal displays "\[rdbox_cli] Success completed." In case of other display, please re-execute.
+
     ```bash
     $ sudo rdbox_cli init onprem
     :
@@ -60,12 +63,16 @@ In this document, we run the initial process for using rdbox_cli and some of the
     :
     [rdbox_cli] Success completed.
     ```
+
 3.  Initialize helm. (Helm is a package manager for Kubernetes, it helps to add various functions to RDBOX, see [Helm - The Kubernetes Package Manager](https://helm.sh/) for details)
+
     ```bash
     $ kubectl apply -f https://raw.githubusercontent.com/Azure/helm-charts/master/docs/prerequisities/helm-rbac-config.yaml
     $ helm init --service-account tiller --node-selectors "beta.kubernetes.io/arch"="amd64"
     ```
+
 4.  Activate the function so that you can use Kubernetes' Ingress with RDBOX.
+    
     ```bash
     $ sudo rdbox_cli enable k8s_external_svc
     :
@@ -115,19 +122,25 @@ Please note that data persistence is not guaranteed.
     ```
 
 2.  Perform network tests. Please do it after a few minutes after `1. Activate temporary container cache registry`. Issue a GET request to the domain of "<https://cache-registry.rdbox.lan/v2/_catalog">. Please confirm that response message `{"repositories": []}` comes back.
+
     ```bash
     $ curl https://cache-registry.rdbox.lan/v2/_catalog
     {"repositories": []}
     ```
+
 3.  Execute Docker Pull at an arbitrary RDBOX.
+
     ```bash
     $ docker pull centos:7
     ```
+
 4.  Execute the same curl command. Then, the image downloaded with "3." Is displayed.
+
     ```bash
     $ curl https://cache-registry.rdbox.lan/v2/_catalog
     {"repositories": [centos/7]}
     ```
+
 5.  Thereafter, when pulling the same image, the temporary container cache registry is used preferentially. When deploying images to a large number of robots, we can efficiently distribute images. By pre-caching the image.
 
 #### Disable temporary cache registry

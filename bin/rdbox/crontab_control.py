@@ -60,9 +60,9 @@ class CrontabControl(object):
                 self.read_jobs()
             except IOError:
                 return False
-        iter = self.cron.find_comment(comment)
+        comment_list = self.cron.find_comment(comment)
         tmp = []
-        for item in iter:
+        for item in comment_list:
             tmp.append(item)
         return len(tmp) >= 1
 

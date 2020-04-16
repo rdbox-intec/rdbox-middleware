@@ -69,16 +69,16 @@ start () {
 	first_session_status=$(cat /var/lib/rdbox/.completed_first_session)
 	if kill -0 "$first_session_status" > /dev/null 2>&1; then
 		if [[ $rdbox_type =~ $regex_master ]]; then
-		  source /etc/rdbox/network/iptables > $BOOT_LOG 2>&1
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
+      source /etc/rdbox/network/iptables > $BOOT_LOG 2>&1
+      /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_slave ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
+      /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
+      /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
+      /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		else
-		  echo "OK!!"
+      echo "OK!!"
 		fi
 	else
     all_status_reg="$regex_master|$regex_slave|$regex_vpnbridge|$regex_other|$regex_simplexmst|$regex_simplexslv"
@@ -90,16 +90,16 @@ start () {
 			##############################
 		fi
 		if [[ $rdbox_type =~ $regex_master ]]; then
-		  source /etc/rdbox/network/iptables > $BOOT_LOG 2>&1
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
+      source /etc/rdbox/network/iptables > $BOOT_LOG 2>&1
+      /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_slave ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
+      /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
+      /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
-		  /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
+      /bin/bash /opt/rdbox/boot/rdbox-boot_sub.bash > $BOOT_LOG 2>&1
 		else
-		  echo "OK!!"
+      echo "OK!!"
 		fi
 	fi
 	return 0
@@ -130,7 +130,7 @@ elif [[ $hname =~ $regex_slave ]]; then
     rdbox_type="simplexslv"
   else
     rdbox_type="slave"
-  fi 
+  fi
 elif [[ $hname =~ $regex_vpnbridge ]]; then
   rdbox_type="vpnbridge"
 else

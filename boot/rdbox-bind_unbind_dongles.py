@@ -8,7 +8,7 @@ import subprocess
 
 
 def main():
-    rows, header = csv_read_stdin(1000, True)
+    rows, _ = csv_read_stdin(1000, True)
     datas = []
     for row in rows:
         datas.append(row)

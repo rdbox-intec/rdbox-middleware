@@ -9,5 +9,5 @@ class K8sClient(object):
     CONF_FILEPATH = "/home/{user}/.kube/config".format(user=USER)
 
     @classmethod
-    def call(self):
-        assert False
+    def call(cls):
+        raise BaseException

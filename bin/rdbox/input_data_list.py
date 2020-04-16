@@ -13,7 +13,7 @@ class InputDataList(object):
     def get_by_instance(self, instance):
         input_data_list = InputDataList()
         for input_data in self.input_list:
-            if type(input_data) is instance:
+            if isinstance(input_data, instance):
                 input_data_list.add(input_data)
         return input_data_list
 

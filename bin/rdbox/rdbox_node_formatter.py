@@ -4,5 +4,5 @@
 
 class RdboxNodeFormatter(object):
     @classmethod
-    def output_report(self, rdbox_node_list):
+    def output_report(cls, rdbox_node_list):
         raise(IOError)

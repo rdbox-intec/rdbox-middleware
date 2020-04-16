@@ -66,7 +66,7 @@ class DnsK8sExternalSvc(object):
         finally:
             if f:
                 f.close()
-            return lines
+        return lines
 
     def _write_file(self, file_name, content):
         f = open(file_name, "w")

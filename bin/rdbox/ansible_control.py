@@ -132,6 +132,12 @@ class AnsibleControl(object):
             sys.stdout = StdLoggerWriter(r_print.debug)
             sys.stderr = StdLoggerWriter(r_print.info)
             ret = pbex.run()
+        except FileNotFoundError:
+            sys.stdout = bak_stdout
+            sys.stderr = bak_stderr
+            import traceback
+            r_print.error(traceback.format_exc())
+            ret = -1
         except Exception:
             sys.stdout = bak_stdout
             sys.stderr = bak_stderr
@@ -149,11 +155,6 @@ class AnsibleControl(object):
             pass
         return ret
 
-    def _preinstall_playbook_path_builder(self, playbook_name):
-        playbook_path = rdbox.config.get("ansible", "playbook_dir")
-        playbook_filename = 'site.yml'
-        return os.path.join(playbook_path, playbook_name, playbook_filename)
-
     def _create_inventry_file_from_k8s(self, inventry_path):
         get_command_node = GetCommandNode()
         get_command = get_command_node.build(
@@ -161,10 +162,18 @@ class AnsibleControl(object):
         _, now_report = get_command.execute()
         self._write_file(inventry_path, now_report)
 
-    def _write_file(self, file_name, content):
+    @staticmethod
+    def _write_file(file_name, content):
         f = open(file_name, "w")
         f.write(content)
         f.close()
 
+    @staticmethod
+    def _preinstall_playbook_path_builder(playbook_name):
+        playbook_path = rdbox.config.get("ansible", "playbook_dir")
+        playbook_filename = 'site.yml'
+        return os.path.join(playbook_path, playbook_name, playbook_filename)
+
+    @staticmethod
     def _remove_file(self, path):
         os.remove(path)

@@ -354,7 +354,7 @@ elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
   /sbin/dhclient br0
-  if [ "$(/sbin/ip -f inet -o addr show wlan0 | cut -d\  -f 7 | cut -d/ -f 1 | wc -l)" -gt  0] ; then
+  if [ "$(/sbin/ip -f inet -o addr show wlan0 | cut -d\  -f 7 | cut -d/ -f 1 | wc -l)" -gt 0 ]; then
     /sbin/dhclient br0
   fi
   sleep 10
@@ -380,7 +380,7 @@ else
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
   /sbin/ifup wlan0
-  if [ "$(/sbin/ip -f inet -o addr show wlan0 | cut -d\  -f 7 | cut -d/ -f 1 | wc -l)" -gt  0] ; then
+  if [ "$(/sbin/ip -f inet -o addr show wlan0 | cut -d\  -f 7 | cut -d/ -f 1 | wc -l)" -gt  0 ] ; then
     /sbin/dhclient wlan0
   fi
   sleep 10
