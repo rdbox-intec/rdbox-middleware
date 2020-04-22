@@ -1,5 +1,5 @@
-rdbox (0.0.25) stretch; urgency=medium
+rdbox (0.1.6) stretch; urgency=medium
 
-  * Open Source Version
+  * Upd Kubernetes Version.
 
- -- INTEC Inc. <info-rdbox@intec.co.jp>  Thu, 12 Feb 2018 16:55:06 +0900
+ -- INTEC Inc. <info-rdbox@intec.co.jp>  Wed, 22 Apr 2020 14:18:06 +0900
