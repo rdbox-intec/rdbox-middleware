@@ -30,9 +30,10 @@ do
     echo "$(date +%H:%M:%S:%N) +++ OK +++"
     success=$((success + 1))
     if [ "$success" -eq $SUCCESS_THRESHOLD ]; then
-      sudo kubeadm join "$@"
+      kubeadm join "$@"
       mkdir -p /home/"$(ls /home)"/.kube/
-      scp -o "StrictHostKeyChecking=no" $remote_user@"$IP_K8S_MASTER":/home/$remote_user/.kube/config /home/"$(ls /home)"/.kube/config
+      scp -i /home/"$(ls /home)"/.ssh/id_rsa  -o "StrictHostKeyChecking=no" $remote_user@"$IP_K8S_MASTER":/home/$remote_user/.kube/config /home/"$(ls /home)"/.kube/config
+      chown -R "$(ls /home)":"$(ls /home)" /home/"$(ls /home)"/.kube
       sleep 30
       kubectl label node "$(hostname)" node.rdbox.com/location=edge
       kubectl label node "$(hostname)" node.rdbox.com/edge=$rdbox_type
