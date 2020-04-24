@@ -93,25 +93,25 @@ class HelmControl(object):
         copy_tree(src, dst)
 
     def delete(self, helm_chart_name, helm_home, kube_config, **kwargs):
-        base_cmd = '{helm} delete --purge --home {helm_home} --kubeconfig {kube_config} {name}'.format(
-            helm=self.HELM_BIN_PATH, helm_home=helm_home, kube_config=kube_config, name=helm_chart_name)
+        base_cmd = '{helm} uninstall --kubeconfig {kube_config} --namespace {namespace} {name}'.format(
+            helm=self.HELM_BIN_PATH, helm_home=helm_home, kube_config=kube_config, namespace=rdbox.config.get("kubernetes", "rdbox_namespace"), name=helm_chart_name)
         base_cmd += self._kwargs_to_command(self.HELM_DELETE_FLG, **kwargs)
         is_success = self._subprocess_popen_with_judge(
-            base_cmd.strip(), "deleted", "not found")
+            base_cmd.strip(), "uninstalled", "not found")
         return is_success
 
     def install(self, work_path, helm_chart_name, helm_home, kube_config, sets, **kwargs):
         parsed_set_command, _ = self.parse_set_flag(
             sets)  # ex) "--set a=1,b=2"
-        base_cmd = '{helm} install {work_path} --name {name} --home {helm_home} --kubeconfig {kube_config} --namespace {namespace} {sets}'.format(
+        base_cmd = '{helm} install {name} {work_path} --kubeconfig {kube_config} --namespace {namespace} {sets}'.format(
             helm=self.HELM_BIN_PATH, work_path=work_path, name=helm_chart_name, helm_home=helm_home, kube_config=kube_config, namespace=rdbox.config.get("kubernetes", "rdbox_namespace"), sets=parsed_set_command)
         base_cmd += self._kwargs_to_command(self.HELM_INSTALL_FLG, **kwargs)
         is_success = self._subprocess_popen_with_judge(
-            base_cmd.strip(), "STATUS: DEPLOYED", "already exists")
+            base_cmd.strip(), "STATUS: deployed", "already exists")
         return is_success
 
     def dependency(self, command, work_path, helm_home, **kwargs):
-        base_cmd = '{helm} dependency {command} {work_path} --home {helm_home}'.format(
+        base_cmd = '{helm} dependency {command} {work_path}'.format(
             helm=self.HELM_BIN_PATH, command=command, helm_home=helm_home, work_path=work_path)
         base_cmd += self._kwargs_to_command(**kwargs)
         is_success = self._subprocess_popen_with_judge(
