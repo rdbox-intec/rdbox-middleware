@@ -101,9 +101,9 @@ class ClassifierForInitCommand(object):
     @classmethod
     def _yes_no_input(cls):
         while True:
-            choice = input("crt file already exists. \
-                            Do you want to skip creating a new one? \
-                            'yes' or 'no' [y/N]: ").lower()
+            choice = input("crt file already exists." \
+                           "Do you want to skip creating a new one?" \
+                           "'yes' or 'no' [y/N]: ").lower()
             if choice in ['y', 'ye', 'yes', '']:
                 return True
             elif choice in ['n', 'no']:

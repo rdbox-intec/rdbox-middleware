@@ -12,7 +12,6 @@ class K8sClientCoreV1Api(K8sClient):
         else:
             self.opt = opt
         self.method_name = method_name
-        self.opt = opt
 
     def call(self):
         config.load_kube_config(K8sClient.CONF_FILEPATH)

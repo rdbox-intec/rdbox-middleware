@@ -5,7 +5,7 @@ import socket
 from rdbox.k8s_response_helper import K8sResponseHelper
 from rdbox.k8s_response_helper_v1servicelist import K8sResponseHelperV1ServiceList
 from rdbox.k8s_response_external import K8sResponseExternal
-from kubernetes.client.models import V1beta1IngressList, V1ServiceList
+from kubernetes.client.models import ExtensionsV1beta1IngressList, V1ServiceList
 
 
 class K8sResponseHelperV1beta1IngressList(K8sResponseHelper):
@@ -31,7 +31,7 @@ class K8sResponseHelperV1beta1IngressList(K8sResponseHelper):
             list_of_k8s_response_external)  # list[K8sResponseExternal]
         # Ingress:
         v1ing_input_data_list = self.get_input_data_list().get_by_instance(
-            V1beta1IngressList)                    # InputDataList
+            ExtensionsV1beta1IngressList)                    # InputDataList
         if len(v1ing_input_data_list.get_list()) < 1:
             return ret
         # for V1beta1IngressList in InputDataList:
@@ -48,8 +48,7 @@ class K8sResponseHelperV1beta1IngressList(K8sResponseHelper):
                     ip = self._get_external_ip(v1ing)
                     # for K8sResponseExternal in K8sResponseExternalList:
                     for external in list_of_nginx_ingress_external:
-                        if ip is None:
-                            ip = external.get_ip()
+                        ip = external.get_ip()
                         ex = K8sResponseExternal(v1ing, hostname, ip, location)
                         ret.append(ex)
         ret.extend(list_of_ignore_nginx_ingress_external)
