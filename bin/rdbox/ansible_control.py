@@ -3,8 +3,12 @@
 
 import os
 import sys
+import json
 import errno
+import argparse
 from collections import namedtuple
+
+from ansible import context
 from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.inventory.manager import InventoryManager
 from ansible.parsing.dataloader import DataLoader
@@ -65,66 +69,59 @@ class AnsibleControl(object):
     def playbook_all(self, playbook_name, tags_set, extra_vars_dict,
                      keyfile_path):
         ret = -1
-        playbook_path = self._preinstall_playbook_path_builder(playbook_name)
-        r_print.debug(playbook_path)
-        inventry_path = '{work_dir}/.inventry'.format(
-            work_dir=rdbox.config.get("ansible", "work_dir"))
+        options = argparse.Namespace(ask_pass=False,
+                                     ask_vault_pass=False,
+                                     become=True,
+                                     become_ask_pass=False,
+                                     become_method='sudo',
+                                     become_user='root',
+                                     check=False,
+                                     connection='smart',
+                                     diff=False,
+                                     extra_vars=[json.dumps(extra_vars_dict)],
+                                     flush_cache=False,
+                                     force_handlers=False,
+                                     forks=10,
+                                     listhosts=False,
+                                     listtags=False,
+                                     listtasks=False,
+                                     module_path=None,
+                                     private_key_file=keyfile_path,
+                                     remote_user=None,
+                                     scp_extra_args='',
+                                     sftp_extra_args='',
+                                     skip_tags=[],
+                                     ssh_common_args='',
+                                     ssh_extra_args='',
+                                     start_at_task=None,
+                                     step=False,
+                                     subset=None,
+                                     syntax=False,
+                                     tags=tags_set,
+                                     timeout=120,
+                                     vault_ids=[],
+                                     vault_password_files=[],
+                                     verbosity=0,
+                                     version=None)
+        context._init_global_context(options)
         try:
+            playbook_path = self._preinstall_playbook_path_builder(playbook_name)
+            r_print.debug(playbook_path)
+            inventry_path = '{work_dir}/.inventry'.format(
+                work_dir=rdbox.config.get("ansible", "work_dir"))
             loader = DataLoader()
             self._create_inventry_file_from_k8s(inventry_path)
             inventory = InventoryManager(loader=loader, sources=inventry_path)
-            variable_manager = VariableManager(
-                loader=loader, inventory=inventory)
-            variable_manager.extra_vars = extra_vars_dict
+            variable_manager = VariableManager(loader=loader, inventory=inventory)
+            #variable_manager._extra_vars = extra_vars_dict
             if not os.path.exists(playbook_path):
                 raise IOError(
                     errno.ENOENT, os.strerror(errno.ENOENT), playbook_path)
-            Options = namedtuple('Options', ['listtags',
-                                             'listtasks',
-                                             'listhosts',
-                                             'syntax',
-                                             'connection',
-                                             'module_path',
-                                             'forks',
-                                             'remote_user',
-                                             'private_key_file',
-                                             'ssh_common_args',
-                                             'ssh_extra_args',
-                                             'sftp_extra_args',
-                                             'scp_extra_args',
-                                             'become',
-                                             'become_method',
-                                             'become_user',
-                                             'verbosity',
-                                             'check',
-                                             'diff',
-                                             'tags'])
-            options = Options(listtags=False,
-                              listtasks=False,
-                              listhosts=False,
-                              syntax=False,
-                              connection='smart',
-                              module_path=None,
-                              forks=5,
-                              remote_user=None,
-                              private_key_file=keyfile_path,
-                              ssh_common_args=None,
-                              ssh_extra_args=None,
-                              sftp_extra_args=None,
-                              scp_extra_args=None,
-                              become=True,
-                              become_method='sudo',
-                              become_user='root',
-                              verbosity=None,
-                              check=False,
-                              diff=False,
-                              tags=tags_set)
             passwords = {}
             pbex = PlaybookExecutor(playbooks=[playbook_path],
                                     inventory=inventory,
                                     variable_manager=variable_manager,
                                     loader=loader,
-                                    options=options,
                                     passwords=passwords)
             # redirect
             bak_stdout = sys.stdout
