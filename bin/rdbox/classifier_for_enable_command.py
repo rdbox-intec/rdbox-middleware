@@ -61,7 +61,7 @@ class ClassifierForEnableCommand(ClassifierForEnableDisableCommand):
         r_print.info(
             'Test Operation: If the response is "{"repositories": []}",')
         r_print.info('it is successful!!')
-        r_print.info('$ curl {cache_url}'.format(cache_url=cache_url))
+        r_print.info('$ curl {cache_url}/v2/_catalog'.format(cache_url=cache_url))
         r_print.info('{"repositories": []}')
         r_print.info('')
         r_print.info('##################')
