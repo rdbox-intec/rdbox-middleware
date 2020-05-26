@@ -16,7 +16,7 @@ class ClassifierForEnableDisableCommand(object):
     HELMTYPES = "onpremise-ingress-controller|temporary-cache-registry"
     HELMTYPES_LIST = HELMTYPES.split("|")
     FUNC_HELM_MAPPING = {}
-    
+
     for index, _ in enumerate(FUNCTYPES_LIST):
         FUNC_HELM_MAPPING[FUNCTYPES_LIST[index]] = HELMTYPES_LIST[index]
 

@@ -3,6 +3,7 @@
 
 import yaml
 import os
+import re
 import rdbox.config
 import subprocess
 from distutils.dir_util import copy_tree
@@ -130,6 +131,8 @@ class HelmControl(object):
             validated_sets = ""
             validated_sets_len = len(set_dict)
             for i, (key, value) in enumerate(set_dict.items()):
+                key = re.sub(r'\;|\&|\(|\)|\$|\<|\>|\*|\?|\{|\}|\[|\]|\!|\"|\'', '', str(key))
+                value = re.sub(r'\;|\&|\(|\)|\$|\<|\>|\*|\?|\{|\}|\[|\]|\!|\"|\'', '', str(value))
                 validated_sets = validated_sets + \
                     "{key}={value}".format(key=key, value=value)
                 if i < validated_sets_len - 1:
