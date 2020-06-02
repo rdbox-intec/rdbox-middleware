@@ -19,3 +19,6 @@ openebs:
 
   webhook:
     nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
+  
+storageClass:
+  ReplicaCount: 1

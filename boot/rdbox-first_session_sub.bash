@@ -141,7 +141,7 @@ if [[ $rdbox_type =~ $regex_master ]]; then
       if [ "$line" = "$first_addr" ]; then
         continue
       fi
-      echo "nameserver $line " >> hoge
+      echo "nameserver $line " >> /etc/rdbox/dnsmasq.resolver.conf
     done
     touch /var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf
     /bin/systemctl enable dnsmasq.service
@@ -166,6 +166,9 @@ if [[ $rdbox_type =~ $regex_master ]]; then
   fi
   systemctl enable ntp.service
   systemctl restart ntp.service
+  echo "KUBELET_EXTRA_ARGS=--node-ip=${ip_br0}" > /etc/default/kubelet
+  /bin/systemctl daemon-reload
+  /bin/systemctl restart kubelet
   sleep 30
   apt update
   snap install helm --classic

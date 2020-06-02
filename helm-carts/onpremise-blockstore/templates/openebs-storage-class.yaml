@@ -6,7 +6,7 @@ metadata:
     openebs.io/cas-type: jiva
     cas.openebs.io/config: |
       - name: ReplicaCount
-        value: "1"
+        value: {{ .Values.storageClass.ReplicaCount }}
       - name: StoragePool
         value: default
       - name: TargetNodeSelector

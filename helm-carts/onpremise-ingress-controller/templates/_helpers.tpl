@@ -30,3 +30,11 @@ Create chart name and version as used by the chart label.
 {{- define "onpremise-ingress-controller.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{/*
+Create a default fully qualified controller name.
+We truncate at 63 chars because some Kubernetes name fields are limited to this (by the DNS naming spec).
+*/}}
+{{- define "onpremise-ingress-controller.nginx-ingress.controller.fullname" -}}
+{{- printf "%s-%s" (include "onpremise-ingress-controller.fullname" .) "nginx-ingress-controller" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
