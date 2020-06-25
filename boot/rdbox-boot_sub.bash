@@ -33,6 +33,43 @@ check_active_yoursite_wifi () {
   fi
 }
 
+check_active_default_gw () {
+  isActive=$(route | grep -c default)
+  if [ "$isActive" = 0 ]; then
+      echo "Already set default gw"
+  else
+      echo "Not set Default gw"
+      return 10
+  fi
+  return 0
+}
+
+update_dnsinfo () {
+  _addr_br0=$(/sbin/ifconfig br0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}')
+  source /opt/rdbox/boot/dns_from_dhcp_lease.bash eth0
+  dns_ip_list=$(get_dns_from_dhcp_lease | awk '{$1="";print}')
+  for line in $dns_ip_list
+  do
+    echo "nameserver ${line}" >> /tmp/.rdbox-dns
+  done
+  source /opt/rdbox/boot/dns_from_dhcp_lease.bash wlan0
+  dns_ip_list=$(get_dns_from_dhcp_lease | awk '{$1="";print}')
+  for line in $dns_ip_list
+  do
+    echo "nameserver ${line}" >> /tmp/.rdbox-dns
+  done
+  dns_ip_list=$(< /etc/rdbox/network/interfaces.d/current/br0 grep dns-nameservers | awk '{$1="";print}')
+  for line in $dns_ip_list
+  do
+    if [ "$line" = "$_addr_br0" ]; then
+      continue
+    fi
+    echo "nameserver ${line}" >> /tmp/.rdbox-dns
+  done
+  awk '!colname[$2]++{print $1" "$2}' /tmp/.rdbox-dns sudo tee /etc/rdbox/dnsmasq.resolver.conf
+  rm -rf /tmp/.rdbox-dns
+}
+
 discrimination_model () {
   if ! cat /var/lib/rdbox/.is_simple; then
     is_simple=false
@@ -413,7 +450,7 @@ _simplexmst_ether_simplemesh_hostapd () {
     return 5
   fi
   /bin/systemctl restart networking.service
-  source /etc/rdbox/network/iptables.mstsimple
+  source /etc/rdbox/network/iptables.mstsimple.eth0
   _simplexmst_ether_common_connect
   ret=$?
   if [ "$ret" -gt 0 ]; then
@@ -500,7 +537,7 @@ for_simplexmst () {
           ret=$?
         else
           # 0 dongle (Ethernet)
-          source /etc/rdbox/network/iptables.mstsimple
+          source /etc/rdbox/network/iptables.mstsimple.eth0
           sed -i -e '/^interface\=/c\interface\=wlan0' /etc/rdbox/hostapd_ap_bg.conf
           # hostapd #######################
           startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
@@ -519,20 +556,25 @@ for_simplexmst () {
     COUNT=$((COUNT + 1))
   done
   # Success Connection
-  if wait_tap_device; then
-    /sbin/brctl addif br0 tap_br0
-  else
-    return 1
-  fi
   if $is_active_yoursite_wifi; then
     /sbin/brctl addif br0 eth0
   fi
+  /sbin/brctl addif br0 bat0
+  ip link set up dev bat0
   _ip_count=$(/sbin/ifconfig br0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
   if [ "$_ip_count" -eq 0 ]; then
     if ! wait_dhclient br0; then
       return 1
     fi
   fi
+  _ip_count=$(/sbin/ifconfig vpn_rdbox | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
+  if [ "$_ip_count" -eq 0 ]; then
+    if ! wait_dhclient vpn_rdbox; then
+      return 1
+    fi
+    ip link set vpn_rdbox mtu 1280
+  fi
+  update_dnsinfo
   return 0
 }
 
@@ -574,6 +616,9 @@ for_simplexslv () {
     return 1
   fi
   /sbin/brctl addif br0 eth0
+  if ! check_active_default_gw; then
+    /sbin/route add default gw  "$(/var/lib/dhcp/dhclient.br0.leases | grep routers | cut -d" " -f 5 | cut -d";" -f 1)"
+  fi
   return 0
 }
 

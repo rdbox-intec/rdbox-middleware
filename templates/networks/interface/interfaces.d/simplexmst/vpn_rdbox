@@ -1,0 +1,4 @@
+auto vpn_rdbox
+allow-hotplug vpn_rdbox
+iface vpn_rdbox inet manual
+  mtu 1280
