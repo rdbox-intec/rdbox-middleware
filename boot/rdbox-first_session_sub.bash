@@ -79,7 +79,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   ## For VPN ######################################################
   /bin/systemctl enable softether-vpnclient.service
   /bin/systemctl restart softether-vpnclient.service
-  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnclient.in
+  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
   /bin/systemctl restart softether-vpnclient.service
   sleep 30
   /sbin/dhclient vpn_rdbox
