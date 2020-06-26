@@ -74,12 +74,20 @@ chmod 777 /var/log/rdbox
 
 if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   # INTERFACE #################################################################
+  {
+    echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="b8:27:eb:??:??:??", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"'
+    echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="b8:27:eb:??:??:??", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="wlan0"'
+    echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="dc:a6:32:??:??:??", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"'
+    echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="dc:a6:32:??:??:??", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="wlan0"'
+  } > /etc/udev/rules.d/70-persistent-net.rules
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/simplexmst/* /etc/rdbox/network/interfaces.d/current
   mv /etc/network/interfaces.d /etc/network/interfaces.d.bak
   ln -fs /etc/rdbox/network/interfaces.d/current /etc/network/interfaces.d
+  /bin/systemctl stop networking.service
+  /bin/systemctl start networking.service
   ## For VPN ######################################################
   check_active_yoursite_wifi
   if $is_active_yoursite_wifi; then
@@ -101,7 +109,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   sleep 15
   /bin/systemctl enable softether-vpnclient.service
   /bin/systemctl restart softether-vpnclient.service
-  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
+  /usr/bin/vpncmd localhost -client -in:/usr/local/etc/vpnbridge.in
   /bin/systemctl restart softether-vpnclient.service
   sleep 15
   wait_dhclient vpn_rdbox
