@@ -2,6 +2,9 @@
 export LC_ALL=C
 export LANG=C
 
+source /opt/rdbox/boot/util_for_network_connection.bash
+source /opt/rdbox/boot/util_for_ip_addresses.bash
+
 SSHD_TIMEOUT=120
 WPA_AUTH_TIMEOUT=30
 HOSTAPD_TIMEOUT=30
@@ -11,6 +14,7 @@ regex_slave='^.*slave.*'
 regex_simplexmst='^.*simplexmst.*'
 regex_simplexslv='^.*simplexslv.*'
 is_simple_mesh=false
+rdbox_type=''
 hname=$(/bin/hostname)
 RETRY_COUNT=5
 WPA_LOG=/var/log/rdbox/rdbox_boot_wpa.log
@@ -129,27 +133,6 @@ check_batman () {
   return 0
 }
 
-wait_dhclient () {
-  sleep 10
-  COUNT=0
-  while true
-  do
-    if /sbin/dhclient -1 "$1"; then
-      echo "dhclient is running."
-      break
-    else
-      echo "wait dhclient..."
-    fi
-    if [ $COUNT -eq $RETRY_COUNT ]; then
-      echo "dhclient RETRY OVER!"
-      return 8
-    fi
-    sleep 10
-    COUNT=$((COUNT + 1))
-  done
-  return 0
-}
-
 wait_tap_device () {
   COUNT=0
   while true
@@ -218,24 +201,6 @@ check_device_simple () {
   return 0
 }
 
-watch_wifi () {
-  current_time=$1
-  while read -rt ${WPA_AUTH_TIMEOUT} line; do
-    echo "  $line"
-    if echo "$line" | grep -wq 'CTRL-EVENT-CONNECTED'; then
-      echo "  wifi OK!!"
-      return 0
-    fi
-    # judge timeout
-    if [ $(($(date +%s) - current_time)) -gt ${WPA_AUTH_TIMEOUT} ]; then
-      echo "  unmatch Timeout."
-      return 1
-    fi
-  done
-  echo "  read Timeout."
-  return 2
-}
-
 watch_hostapd () {
   current_time=$1
   while read -rt ${HOSTAPD_TIMEOUT} line; do
@@ -252,21 +217,6 @@ watch_hostapd () {
   done
   echo "  read Timeout."
   return 2
-}
-
-connect_wifi_with_timeout () {
-  # wpa #######################
-  current_time=$(date +%s)
-  /sbin/wpa_supplicant -B -f $WPA_LOG -P $PIDFILE_SUPLICANT -D nl80211 "$@"
-  rtn=1
-  { watch_wifi "$current_time"; rtn=$?; kill -s INT "$(pgrep -a tail | grep -v /usr/bin/timeout | grep $WPA_LOG | awk '{ print $1 }')"; } < <(/usr/bin/timeout --signal=HUP "$((WPA_AUTH_TIMEOUT + 10))"s /usr/bin/tail --follow=name --retry $WPA_LOG)
-  if [ $rtn -eq 0 ]; then
-    return 0
-  else
-    echo 'WPA authentication failed.'
-    pkill -INT -f wpa_supplicant
-    return 5
-  fi
 }
 
 startup_hostapd_with_timeout () {
@@ -423,15 +373,7 @@ _simplexmst_wifi_nomesh_hostapd () {
   fi
   return 0
 }
-_simplexmst_ether_common_connect () {
-  _ip_count=$(/sbin/ifconfig eth0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
-  if [ "$_ip_count" -eq 0 ]; then
-    if ! wait_dhclient eth0; then
-      return 6
-    fi
-  fi
-  return 0
-}
+
 _simplexmst_ether_simplemesh_hostapd () {
   # 1 dongle
   if ! iw dev wlan1 interface add awlan0 type __ap; then
@@ -451,7 +393,7 @@ _simplexmst_ether_simplemesh_hostapd () {
   fi
   /bin/systemctl restart networking.service
   source /etc/rdbox/network/iptables.mstsimple.eth0
-  _simplexmst_ether_common_connect
+  connect_ether
   ret=$?
   if [ "$ret" -gt 0 ]; then
     return 6
@@ -509,11 +451,11 @@ for_simplexmst () {
     else
       if $is_simple_mesh; then
         # 1 dongle
-        #_simplexmst_ether_common_connect
+        #connect_ether
         ret=0
       else
         # 0 dongle (Ethernet)
-        _simplexmst_ether_common_connect
+        connect_ether
         ret=$?
       fi
     fi

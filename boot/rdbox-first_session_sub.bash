@@ -2,6 +2,7 @@
 export LC_ALL=C
 export LANG=C
 
+source /opt/rdbox/boot/util_for_network_connection.bash
 source /opt/rdbox/boot/util_for_ip_addresses.bash
 
 regex_master='^.*master.*'
@@ -71,18 +72,38 @@ chmod 777 /var/lib/rdbox
 chmod 777 /var/log/rdbox
 
 if [[ $rdbox_type =~ $regex_simplexmst ]]; then
+  # INTERFACE #################################################################
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
-  # INTERFACE #################################################################
   cp -n /etc/rdbox/network/interfaces.d/simplexmst/* /etc/rdbox/network/interfaces.d/current
+  mv /etc/network/interfaces.d /etc/network/interfaces.d.bak
+  ln -fs /etc/rdbox/network/interfaces.d/current /etc/network/interfaces.d
   ## For VPN ######################################################
+  check_active_yoursite_wifi
+  if $is_active_yoursite_wifi; then
+    if ! connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
+      echo 'ERR: Wi-Fi connection failed.'
+      return 1
+    else
+      if ! wait_dhclient wlan0; then
+        echo 'ERR: RDBOX could not get an IP address from your Wi-Fi access point.'
+        return 2
+      fi
+    fi
+  else
+    if ! connect_ether; then
+      echo 'ERR: RDBOX could not connect to your wired network.'
+      return 3
+    fi
+  fi
+  sleep 15
   /bin/systemctl enable softether-vpnclient.service
   /bin/systemctl restart softether-vpnclient.service
   /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
   /bin/systemctl restart softether-vpnclient.service
-  sleep 30
-  /sbin/dhclient vpn_rdbox
+  sleep 15
+  wait_dhclient vpn_rdbox
   ip_vpnrdbox=$(ip -f inet -o addr show vpn_rdbox|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n')
   ip_vpnrdbox_cidr_netmask=$(cidr_netmask "${ip_vpnrdbox}")
   ip_vpnrdbox_fourth=$(cut -d'.' -f4 <<<"${ip_vpnrdbox}")
@@ -196,7 +217,6 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
-  check_active_yoursite_wifi
   if $is_active_yoursite_wifi; then
     echo "alive monitoring: wpa and hostapd."
   else
@@ -233,11 +253,7 @@ elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   sed -i "/^#bssid_blacklist$/c bssid_blacklist=$(/sbin/ifconfig awlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
-  /sbin/dhclient br0
-  if [ "$(/sbin/ip -f inet -o addr show wlan0 | cut -d\  -f 7 | cut -d/ -f 1 | wc -l)" -gt 0 ]; then
-    /sbin/dhclient br0
-  fi
-  sleep 10
+  wait_dhclient br0
   if [ ! -s "/etc/resolv.conf" ]; then
     unlink /etc/resolv.conf || :
     rm -rf /etc/resolv.conf || :
@@ -261,9 +277,8 @@ else
   /bin/systemctl start sshd.service
   /sbin/ifup wlan0
   if [ "$(/sbin/ip -f inet -o addr show wlan0 | cut -d\  -f 7 | cut -d/ -f 1 | wc -l)" -gt  0 ] ; then
-    /sbin/dhclient wlan0
+    wait_dhclient wlan0
   fi
-  sleep 10
   if [ ! -s "/etc/resolv.conf" ]; then
     unlink /etc/resolv.conf || :
     rm -rf /etc/resolv.conf || :
