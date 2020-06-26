@@ -5,6 +5,7 @@ export LANG=C
 source /opt/rdbox/boot/util_for_network_connection.bash
 source /opt/rdbox/boot/util_for_ip_addresses.bash
 
+DNS_AUTHORITATIVE_PORT="5353"
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
@@ -104,7 +105,9 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   /bin/systemctl restart softether-vpnclient.service
   sleep 15
   wait_dhclient vpn_rdbox
+  ip_vpnrdbox_with_cidr=$(ip -f inet -o addr show vpn_rdbox|cut -d\  -f 7 | tr -d '\n')
   ip_vpnrdbox=$(ip -f inet -o addr show vpn_rdbox|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n')
+  first_addr_vpnrdbox=$(cidr_default_gw "$ip_vpnrdbox_with_cidr")
   ip_vpnrdbox_cidr_netmask=$(cidr_netmask "${ip_vpnrdbox}")
   ip_vpnrdbox_fourth=$(cut -d'.' -f4 <<<"${ip_vpnrdbox}")
   {
@@ -153,7 +156,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
     echo "dhcp-option=option:ntp-server,${ip_br0}"
     echo "dhcp-option=option:classless-static-route,${ip_vpnrdbox_cidr_netmask},${ip_br0}"
     echo "dhcp-option=option:domain-search,${rdbox_domain},hq.${fname}"
-    echo "port=5353"
+    echo "port=${DNS_AUTHORITATIVE_PORT}"
   } > /etc/rdbox/dnsmasq.conf
   {
     echo "${ip_br0} ${hname} ${hname}.${rdbox_domain}"
@@ -184,6 +187,66 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   touch /var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf
   /bin/systemctl enable dnsmasq.service
   /bin/systemctl restart dnsmasq.service
+  # config bind9
+  {
+    echo "options {"
+    echo "        directory '/var/cache/bind';"
+    echo ""
+    echo "        listen-on port 53 { 127.0.0.1; ${ip_br0_with_cidr}; };"
+    echo "        listen-on-v6 { none; };"
+    echo ""
+    echo "        forward only;"
+    echo "        forwarders  { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo ""
+    echo "        dnssec-validation no;"
+    echo "        auth-nxdomain no;"
+    echo "        version none;"
+    echo "};"
+    echo ""
+    echo "zone '${fname}' IN {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone '${rdbox_domain}' IN {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone '${ip_vpnrdbox_fourth}.168.192.in-addr.arpa' {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo ""
+    echo "zone 'hq.${fname}' IN {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone '0.168.192.in-addr.arpa' {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone '1.168.192.in-addr.arpa' {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone '2.168.192.in-addr.arpa' {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone '3.168.192.in-addr.arpa' {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${first_addr_vpnrdbox}  port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+  } > /etc/bind/named.conf.options
+  /bin/systemctl enable bind9
+  /bin/systemctl restart bind9
   #################################################################
   mkdir -p /usr/local/share/rdbox
   echo "/usr/local/share/rdbox $(ip route | grep br0 | awk '{print $1}')(rw,sync,no_subtree_check,no_root_squash,no_all_squash)" >> /etc/exports
