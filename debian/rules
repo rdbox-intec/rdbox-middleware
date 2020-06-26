@@ -72,6 +72,8 @@ install/rdbox::
 	install -pm 755 boot/to_run_kubeadm_join_after_communicating_with $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/sub_to_run_kubeadm_join_after_communicating_with.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/util_for_ip_addresses.bash $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/util_for_network_connection.bash $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/dns_from_dhcp_lease.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 644 boot/.is_simple $(DEB_DESTDIR)var/lib/rdbox
 	# rdbox
 	install -pd $(DEB_DESTDIR)opt/rdbox/bin
