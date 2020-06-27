@@ -40,10 +40,10 @@ check_active_yoursite_wifi () {
 check_active_default_gw () {
   isActive=$(route | grep -c default)
   if [ "$isActive" = 0 ]; then
-      echo "Already set default gw"
+    echo "Not set Default gw"
+    return 10
   else
-      echo "Not set Default gw"
-      return 10
+    echo "Already set default gw"
   fi
   return 0
 }
@@ -559,7 +559,7 @@ for_simplexslv () {
   fi
   /sbin/brctl addif br0 eth0
   if ! check_active_default_gw; then
-    /sbin/route add default gw  "$(/var/lib/dhcp/dhclient.br0.leases | grep routers | cut -d" " -f 5 | cut -d";" -f 1)"
+    /sbin/route add default gw  "$(< /var/lib/dhcp/dhclient.br0.leases grep routers | cut -d" " -f 5 | cut -d";" -f 1)"
   fi
   return 0
 }
