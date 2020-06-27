@@ -70,7 +70,7 @@ update_dnsinfo () {
     fi
     echo "nameserver ${line}" >> /tmp/.rdbox-dns
   done
-  awk '!colname[$2]++{print $1" "$2}' /tmp/.rdbox-dns sudo tee /etc/rdbox/dnsmasq.resolver.conf
+  awk '!colname[$2]++{print $1" "$2}' /tmp/.rdbox-dns | tee /etc/rdbox/dnsmasq.resolver.conf
   rm -rf /tmp/.rdbox-dns
 }
 

@@ -110,13 +110,12 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   /bin/systemctl enable softether-vpnclient.service
   /bin/systemctl restart softether-vpnclient.service
   /usr/bin/vpncmd localhost -client -in:/usr/local/etc/vpnbridge.in
-  /bin/systemctl restart softether-vpnclient.service
   sleep 15
   wait_dhclient vpn_rdbox
   ip_vpnrdbox_with_cidr=$(ip -f inet -o addr show vpn_rdbox|cut -d\  -f 7 | tr -d '\n')
   ip_vpnrdbox=$(ip -f inet -o addr show vpn_rdbox|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n')
   first_addr_vpnrdbox=$(cidr_default_gw "$ip_vpnrdbox_with_cidr")
-  ip_vpnrdbox_cidr_netmask=$(cidr_netmask "${ip_vpnrdbox}")
+  ip_vpnrdbox_cidr_netmask=$(cidr_netmask "${ip_vpnrdbox_with_cidr}")
   ip_vpnrdbox_fourth=$(cut -d'.' -f4 <<<"${ip_vpnrdbox}")
   {
     echo "auto br0"
@@ -144,7 +143,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   netmask_br0=$(int_to_ip4 "$(netmask_of_prefix "$(cidr_prefix "$ip_br0_with_cidr")")")
   dhcp_min_addr=$(ipmax "$ip_br0_with_cidr" 25)
   dhcp_max_addr=$(cidr_default_gw_2 "$ip_br0_with_cidr")
-  rdbox_domain=${hostname_arr[${HOSTNAME_PART['SUFFIX']}.${fname}}
+  rdbox_domain=${hostname_arr[${HOSTNAME_PART['SUFFIX']}]}.${fname}
   # config dnsmqsq
   {
     echo "interface=br0"
@@ -197,8 +196,8 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   /bin/systemctl restart dnsmasq.service
   # config bind9
   {
-    echo "options {"
-    echo "        directory '/var/cache/bind';"
+    echo 'options {'
+    echo '        directory "/var/cache/bind";'
     echo ""
     echo "        listen-on port 53 { 127.0.0.1; ${ip_br0_with_cidr}; };"
     echo "        listen-on-v6 { none; };"
@@ -211,43 +210,43 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
     echo "        version none;"
     echo "};"
     echo ""
-    echo "zone '${fname}' IN {"
+    echo "zone ${fname} IN {"
     echo "        type forward;"
     echo "        forward only;"
     echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
     echo "};"
-    echo "zone '${rdbox_domain}' IN {"
+    echo "zone ${rdbox_domain} IN {"
     echo "        type forward;"
     echo "        forward only;"
     echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
     echo "};"
-    echo "zone '${ip_vpnrdbox_fourth}.168.192.in-addr.arpa' {"
+    echo "zone ${ip_vpnrdbox_fourth}.168.192.in-addr.arpa {"
     echo "        type forward;"
     echo "        forward only;"
     echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
     echo "};"
     echo ""
-    echo "zone 'hq.${fname}' IN {"
+    echo "zone hq.${fname} IN {"
     echo "        type forward;"
     echo "        forward only;"
     echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
     echo "};"
-    echo "zone '0.168.192.in-addr.arpa' {"
+    echo "zone 0.168.192.in-addr.arpa {"
     echo "        type forward;"
     echo "        forward only;"
     echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
     echo "};"
-    echo "zone '1.168.192.in-addr.arpa' {"
+    echo "zone 1.168.192.in-addr.arpa {"
     echo "        type forward;"
     echo "        forward only;"
     echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
     echo "};"
-    echo "zone '2.168.192.in-addr.arpa' {"
+    echo "zone 2.168.192.in-addr.arpa {"
     echo "        type forward;"
     echo "        forward only;"
     echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
     echo "};"
-    echo "zone '3.168.192.in-addr.arpa' {"
+    echo "zone 3.168.192.in-addr.arpa {"
     echo "        type forward;"
     echo "        forward only;"
     echo "        forwarders { ${first_addr_vpnrdbox}  port ${DNS_AUTHORITATIVE_PORT}; };"
@@ -273,10 +272,6 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
     /bin/systemctl stop transproxy.service
   fi
   ## For VPN.
-  /bin/systemctl enable softether-vpnclient.service
-  /bin/systemctl restart softether-vpnclient.service
-  sleep 30
-  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnclient.in
   /bin/systemctl restart softether-vpnclient.service
   ## For RDBOX.
   /usr/bin/touch /etc/rdbox/hostapd_be.deny
