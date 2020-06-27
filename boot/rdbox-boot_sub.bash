@@ -557,9 +557,10 @@ for_simplexslv () {
   if ! wait_dhclient br0; then
     return 1
   fi
+  ip_br0_with_cidr=$(ip -f inet -o addr show br0|cut -d\  -f 7 | tr -d '\n')
   /sbin/brctl addif br0 eth0
   if ! check_active_default_gw; then
-    /sbin/route add default gw  "$(< /var/lib/dhcp/dhclient.br0.leases grep routers | cut -d" " -f 5 | cut -d";" -f 1)"
+    /sbin/route add default gw "$(cidr_default_gw "$ip_br0_with_cidr")"
   fi
   return 0
 }
