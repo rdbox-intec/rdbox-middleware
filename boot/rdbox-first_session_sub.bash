@@ -161,7 +161,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
     echo "dhcp-option=option:router,${ip_br0}"
     echo "dhcp-option=option:dns-server,${ip_br0}"
     echo "dhcp-option=option:ntp-server,${ip_br0}"
-    echo "dhcp-option=option:classless-static-route,${ip_vpnrdbox_cidr_netmask},${ip_br0}"
+    echo "dhcp-option=option:classless-static-route,0.0.0.0/0,${ip_br0},${ip_vpnrdbox_cidr_netmask},${ip_br0}"
     echo "dhcp-option=option:domain-search,${rdbox_domain},hq.${fname}"
     echo "port=${DNS_AUTHORITATIVE_PORT}"
   } > /etc/rdbox/dnsmasq.conf
