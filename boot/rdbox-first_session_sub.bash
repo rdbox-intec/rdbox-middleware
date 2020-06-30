@@ -2,8 +2,10 @@
 export LC_ALL=C
 export LANG=C
 
+source /opt/rdbox/boot/util_for_network_connection.bash
 source /opt/rdbox/boot/util_for_ip_addresses.bash
 
+DNS_AUTHORITATIVE_PORT="5353"
 regex_master='^.*master.*'
 regex_slave='^.*slave.*'
 regex_vpnbridge='^.*vpnbridge.*'
@@ -35,7 +37,7 @@ declare -A HOSTNAME_PART;
 HOSTNAME_PART=(
   ["PREFIX"]=0
   ["TYPE"]=1
-  ["SUFFIX"]=2
+  ['SUFFIX']=2
 )
 
 if ! cat /var/lib/rdbox/.is_simple; then
@@ -70,224 +72,189 @@ fi
 chmod 777 /var/lib/rdbox
 chmod 777 /var/log/rdbox
 
-if [[ $rdbox_type =~ $regex_master ]]; then
+if [[ $rdbox_type =~ $regex_simplexmst ]]; then
+  # INTERFACE #################################################################
+  {
+    echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="b8:27:eb:??:??:??", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"'
+    echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="b8:27:eb:??:??:??", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="wlan0"'
+    echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="dc:a6:32:??:??:??", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="eth0"'
+    echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="dc:a6:32:??:??:??", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="wlan0"'
+  } > /etc/udev/rules.d/70-persistent-net.rules
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
-  # INTERFACE #################################################################
-  cp -n /etc/rdbox/network/interfaces.d/master/* /etc/rdbox/network/interfaces.d/current
-  if [[ ${hostname_arr[${HOSTNAME_PART["SUFFIX"]}]} != '00' ]]; then
-    {
-      echo "auto br0"
-      echo "allow-hotplug br0"
-      echo "iface br0 inet manual"
-      echo "  bridge_ports bat0"
-    } > /etc/rdbox/network/interfaces.d/current/br0
-  fi
-  #################################################################
-  /bin/systemctl stop sshd.service
+  cp -n /etc/rdbox/network/interfaces.d/simplexmst/* /etc/rdbox/network/interfaces.d/current
+  mv /etc/network/interfaces.d /etc/network/interfaces.d.bak
+  ln -fs /etc/rdbox/network/interfaces.d/current /etc/network/interfaces.d
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
-  /bin/systemctl start sshd.service
-  ifdown br0 && ifup br0
-  /usr/bin/touch /etc/rdbox/hostapd_be.deny
-  sed -i "/^#bssid$/c bssid=$(/sbin/ifconfig wlan2 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')" /etc/rdbox/wpa_supplicant_be.conf
-  /bin/systemctl enable rdbox-boot.service
-  /bin/systemctl restart rdbox-boot.service
-  # DNS
-  #################################################################
-  if [[ ${hostname_arr[${HOSTNAME_PART["SUFFIX"]}]} == '00' ]]; then
-    ip_br0_with_cidr=$(ip -f inet -o addr show br0|cut -d\  -f 7 | tr -d '\n')
-    ip_br0=$(ip -f inet -o addr show br0|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n')
-    #cidr_no=$(cidr_prefix "$ip_br0_with_cidr")
-    first_addr=$(cidr_default_gw "$ip_br0_with_cidr")
-    netmask_br0=$(int_to_ip4 "$(netmask_of_prefix "$(cidr_prefix "$ip_br0_with_cidr")")")
-    arpa_no=$(in-addr_arpa "$ip_br0_with_cidr")
-    dhcp_min_addr=$(ipmax "$ip_br0_with_cidr" 25)
-    dhcp_max_addr=$(cidr_default_gw_2 "$ip_br0_with_cidr")
-    k8smst_addr=$(ipmax "$(cidr_default_gw "$ip_br0_with_cidr")" 2)
-    k8svpn_addr=$(ipmax "$(cidr_default_gw "$ip_br0_with_cidr")" 3)
-    # config dnsmqsq
-    {
-      echo "no-dhcp-interface=eth0,wlan1,wlan2,wlan3,wlan4"
-      echo "listen-address=127.0.0.1,${ip_br0}"
-      echo "interface=br0"
-      echo "domain=${fname}"
-      echo "expand-hosts"
-      echo "no-hosts"
-      echo "server=//${ip_br0}"
-      echo "server=/${fname}/${ip_br0}"
-      echo "server=/${arpa_no}.in-addr.arpa/${ip_br0}"
-      echo "local=/${fname}/"
-      echo "resolv-file=/etc/rdbox/dnsmasq.resolver.conf"
-      echo "dhcp-leasefile=/var/lib/rdbox/dnsmasq.leases"
-      echo "addn-hosts=/etc/rdbox/dnsmasq.hosts.conf"
-      echo "addn-hosts=/var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf"
-      echo "dhcp-range=${dhcp_min_addr},${dhcp_max_addr},${netmask_br0},30d"
-      echo "dhcp-option=option:router,${ip_br0}"
-      echo "dhcp-option=option:dns-server,${ip_br0}"
-      echo "dhcp-option=option:ntp-server,${ip_br0}"
-      echo "port=53"
-    } > /etc/rdbox/dnsmasq.conf
-    {
-      echo "${ip_br0} ${hname} ${hname}.${fname}"
-      echo "${k8smst_addr} rdbox-k8s-master rdbox-k8s-master.${fname}"
-      echo "${k8svpn_addr} rdbox-k8s-vpn rdbox-k8s-vpn.${fname}"
-    } > /etc/rdbox/dnsmasq.hosts.conf
-    touch /etc/rdbox/dnsmasq.resolver.conf
-    dns_ip_list=$(< /etc/rdbox/network/interfaces.d/current/br0 grep dns-nameservers | awk '{$1="";print}')
-    for line in $dns_ip_list
-    do
-      if [ "$line" = "$first_addr" ]; then
-        continue
+  ## For VPN ######################################################
+  check_active_yoursite_wifi
+  if $is_active_yoursite_wifi; then
+    if ! connect_wifi_with_timeout -i wlan0 -c /etc/rdbox/wpa_supplicant_yoursite.conf; then
+      echo 'ERR: Wi-Fi connection failed.'
+      return 1
+    else
+      if ! wait_dhclient wlan0; then
+        echo 'ERR: RDBOX could not get an IP address from your Wi-Fi access point.'
+        return 2
       fi
-      echo "nameserver $line " >> /etc/rdbox/dnsmasq.resolver.conf
-    done
-    touch /var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf
-    /bin/systemctl enable dnsmasq.service
-    /bin/systemctl restart dnsmasq.service
-  fi
-  #################################################################
-  mkdir -p /usr/local/share/rdbox
-  echo "/usr/local/share/rdbox $(ip route | grep br0 | awk '{print $1}')(rw,sync,no_subtree_check,no_root_squash,no_all_squash)" >> /etc/exports
-  exportfs -ra
-  /bin/systemctl enable nfs-kernel-server.service
-  /bin/systemctl start nfs-kernel-server.service
-  http_proxy_size=$(wc -c /etc/transproxy/http_proxy | awk '{print $1}')
-  no_proxy_size=$(wc -c /etc/transproxy/no_proxy | awk '{print $1}')
-  if [ "$http_proxy_size" -gt 12 ]; then
-    if [ "$no_proxy_size" -gt 10 ]; then
-      /bin/systemctl enable transproxy.service
-      /bin/systemctl restart transproxy.service
     fi
   else
-    /bin/systemctl disable transproxy.service
-    /bin/systemctl stop transproxy.service
+    if ! connect_ether; then
+      echo 'ERR: RDBOX could not connect to your wired network.'
+      return 3
+    fi
   fi
-  systemctl enable ntp.service
-  systemctl restart ntp.service
-  echo "KUBELET_EXTRA_ARGS=--node-ip=${ip_br0}" > /etc/default/kubelet
-  /bin/systemctl daemon-reload
-  /bin/systemctl restart kubelet
-  sleep 30
-  apt update
-  snap install helm --classic
-  helm repo add stable https://kubernetes-charts.storage.googleapis.com/
-elif [[ $rdbox_type =~ $regex_slave ]]; then
-  /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
-  mv -n /etc/network/interfaces /etc/network/interfaces.org
-  ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
-  cp -f /etc/rdbox/network/interfaces.d/slave/* /etc/rdbox/network/interfaces.d/current
-  /sbin/ifconfig wlan2 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
-  sed -i "/^#bssid_blacklist$/c bssid_blacklist=$(/sbin/ifconfig wlan2 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')" /etc/rdbox/wpa_supplicant_be.conf
+  sleep 15
+  /bin/systemctl enable softether-vpnclient.service
+  /bin/systemctl restart softether-vpnclient.service
+  /usr/bin/vpncmd localhost -client -in:/usr/local/etc/vpnbridge.in
+  sleep 15
+  wait_dhclient vpn_rdbox
+  ip_vpnrdbox_with_cidr=$(ip -f inet -o addr show vpn_rdbox|cut -d\  -f 7 | tr -d '\n')
+  ip_vpnrdbox=$(ip -f inet -o addr show vpn_rdbox|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n')
+  first_addr_vpnrdbox=$(cidr_default_gw "$ip_vpnrdbox_with_cidr")
+  ip_vpnrdbox_cidr_netmask=$(cidr_netmask "${ip_vpnrdbox_with_cidr}")
+  ip_vpnrdbox_fourth=$(cut -d'.' -f4 <<<"${ip_vpnrdbox}")
+  {
+    echo "auto br0"
+    echo "allow-hotplug br0"
+    echo "iface br0 inet static"
+    echo "  address 192.168.${ip_vpnrdbox_fourth}.1"
+    echo "  netmask 255.255.255.0"
+    echo "  network 192.168.${ip_vpnrdbox_fourth}.0"
+    echo "  broadcast 192.168.${ip_vpnrdbox_fourth}.255"
+    echo "  dns-nameservers 192.168.${ip_vpnrdbox_fourth}.1 8.8.8.8 8.8.4.4"
+    echo "  bridge_ports bat0"
+    echo "  bridge_stp off"
+    echo "  bridge_maxwait 1"
+  } > /etc/rdbox/network/interfaces.d/current/br0
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
   /bin/systemctl start networking.service
   /bin/systemctl start sshd.service
-  /bin/systemctl enable rdbox-boot.service
-  /bin/systemctl restart rdbox-boot.service
-  /sbin/dhclient br0
-  /bin/systemctl disable systemd-networkd-wait-online.service
-  /bin/systemctl mask systemd-networkd-wait-online.service
-  sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
-  systemctl enable ntp.service
-  systemctl restart ntp.service
-  sleep 30
-  apt update
-elif [[ $rdbox_type =~ $regex_vpnbridge ]]; then
-  mv -n /etc/network/interfaces /etc/network/interfaces.org
-  ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
-  cp -n /etc/rdbox/network/interfaces.d/vpnbridge/* /etc/rdbox/network/interfaces.d/current
-  ln -fs /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
-  /bin/systemctl stop sshd.service
-  /bin/systemctl stop networking.service
-  /bin/systemctl start networking.service
-  /bin/systemctl start sshd.service
-  /sbin/ifup wlan0
-  /sbin/dhclient wlan0 
-  #/sbin/ip addr del "$(ip -f inet -o addr show eth0 | cut -d\  -f 7 | cut -d/ -f 1)"/24 dev eth0
-  /bin/systemctl enable softether-vpnbridge.service
-  /bin/systemctl restart softether-vpnbridge.service
-  sleep 30
-  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
-  /bin/systemctl restart softether-vpnbridge.service
-  systemctl enable ntp.service
-  systemctl restart ntp.service
-  sleep 30
-  apt update
-elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
-  /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
-  mv -n /etc/network/interfaces /etc/network/interfaces.org
-  ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
-  # INTERFACE #################################################################
-  cp -n /etc/rdbox/network/interfaces.d/simplexmst/* /etc/rdbox/network/interfaces.d/current
-  if [[ ${hostname_arr[${HOSTNAME_PART["SUFFIX"]}]} != '00' ]]; then
-    {
-      echo "auto br0"
-      echo "allow-hotplug br0"
-      echo "iface br0 inet manual"
-      echo "  bridge_ports bat0"
-    } > /etc/rdbox/network/interfaces.d/current/br0
-  fi
   #################################################################
-  /bin/systemctl stop sshd.service
-  /bin/systemctl stop networking.service
-  /bin/systemctl start networking.service
-  /bin/systemctl start sshd.service
   # DNS
   #################################################################
-  if [[ ${hostname_arr[${HOSTNAME_PART["SUFFIX"]}]} == '00' ]]; then
-    ip_br0_with_cidr=$(ip -f inet -o addr show br0|cut -d\  -f 7 | tr -d '\n')
-    ip_br0=$(ip -f inet -o addr show br0|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n')
-    #cidr_no=$(cidr_prefix "$ip_br0_with_cidr")
-    first_addr=$(cidr_default_gw "$ip_br0_with_cidr")
-    netmask_br0=$(int_to_ip4 "$(netmask_of_prefix "$(cidr_prefix "$ip_br0_with_cidr")")")
-    arpa_no=$(in-addr_arpa "$ip_br0_with_cidr")
-    dhcp_min_addr=$(ipmax "$ip_br0_with_cidr" 25)
-    dhcp_max_addr=$(cidr_default_gw_2 "$ip_br0_with_cidr")
-    k8smst_addr=$(ipmax "$(cidr_default_gw "$ip_br0_with_cidr")" 2)
-    k8svpn_addr=$(ipmax "$(cidr_default_gw "$ip_br0_with_cidr")" 3)
-    # config dnsmqsq
-    {
-      echo "no-dhcp-interface=eth0,wlan0"
-      echo "listen-address=127.0.0.1,${ip_br0}"
-      echo "interface=br0"
-      echo "domain=${fname}"
-      echo "expand-hosts"
-      echo "no-hosts"
-      echo "server=//${ip_br0}"
-      echo "server=/${fname}/${ip_br0}"
-      echo "server=/${arpa_no}.in-addr.arpa/${ip_br0}"
-      echo "local=/${fname}/"
-      echo "resolv-file=/etc/rdbox/dnsmasq.resolver.conf"
-      echo "dhcp-leasefile=/var/lib/rdbox/dnsmasq.leases"
-      echo "addn-hosts=/etc/rdbox/dnsmasq.hosts.conf"
-      echo "addn-hosts=/var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf"
-      echo "dhcp-range=${dhcp_min_addr},${dhcp_max_addr},${netmask_br0},30d"
-      echo "dhcp-option=option:router,${ip_br0}"
-      echo "dhcp-option=option:dns-server,${ip_br0}"
-      echo "dhcp-option=option:ntp-server,${ip_br0}"
-      echo "port=53"
-    } > /etc/rdbox/dnsmasq.conf
-    {
-      echo "${ip_br0} ${hname} ${hname}.${fname}"
-      echo "${k8smst_addr} rdbox-k8s-master rdbox-k8s-master.${fname}"
-      echo "${k8svpn_addr} rdbox-k8s-vpn rdbox-k8s-vpn.${fname}"
-    } > /etc/rdbox/dnsmasq.hosts.conf
-    touch /etc/rdbox/dnsmasq.resolver.conf
-    dns_ip_list=$(< /etc/rdbox/network/interfaces.d/current/br0 grep dns-nameservers | awk '{$1="";print}')
-    for line in $dns_ip_list
-    do
-      if [ "$line" = "$first_addr" ]; then
-        continue
-      fi
-      echo "nameserver $line " >> hoge
-    done
-    touch /var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf
-    /bin/systemctl enable dnsmasq.service
-    /bin/systemctl restart dnsmasq.service
-    #################################################################
-  fi
+  ip_br0_with_cidr=$(ip -f inet -o addr show br0|cut -d\  -f 7 | tr -d '\n')
+  ip_br0=$(ip -f inet -o addr show br0|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n')
+  first_addr_br0=$(cidr_default_gw "$ip_br0_with_cidr")
+  netmask_br0=$(int_to_ip4 "$(netmask_of_prefix "$(cidr_prefix "$ip_br0_with_cidr")")")
+  dhcp_min_addr=$(ipmax "$ip_br0_with_cidr" 25)
+  dhcp_max_addr=$(cidr_default_gw_2 "$ip_br0_with_cidr")
+  rdbox_domain=${hostname_arr[${HOSTNAME_PART['SUFFIX']}]}.${fname}
+  # config dnsmqsq
+  {
+    echo "interface=br0"
+    echo "interface=vpn_rdbox"
+    echo "no-dhcp-interface=eth0,wlan0,vpn_rdbox"
+    echo "expand-hosts"
+    echo "no-hosts"
+    echo "domain=${rdbox_domain}"
+    echo "local=/${rdbox_domain}/"
+    echo "resolv-file=/etc/rdbox/dnsmasq.resolver.conf"
+    echo "dhcp-leasefile=/var/lib/rdbox/dnsmasq.leases"
+    echo "addn-hosts=/etc/rdbox/dnsmasq.hosts.conf"
+    echo "addn-hosts=/var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf"
+    echo "dhcp-range=${dhcp_min_addr},${dhcp_max_addr},${netmask_br0},12h"
+    echo "dhcp-option=option:router,${ip_br0}"
+    echo "dhcp-option=option:dns-server,${ip_br0}"
+    echo "dhcp-option=option:ntp-server,${ip_br0}"
+    echo "dhcp-option=option:classless-static-route,0.0.0.0/0,${ip_br0},${ip_vpnrdbox_cidr_netmask},${ip_br0}"
+    echo "dhcp-option=option:domain-search,${rdbox_domain},hq.${fname}"
+    echo "port=${DNS_AUTHORITATIVE_PORT}"
+  } > /etc/rdbox/dnsmasq.conf
+  {
+    echo "${ip_br0} ${hname} ${hname}.${rdbox_domain}"
+  } > /etc/rdbox/dnsmasq.hosts.conf
+  touch /etc/rdbox/dnsmasq.resolver.conf
+  source /opt/rdbox/boot/dns_from_dhcp_lease.bash eth0
+  dns_ip_list=$(get_dns_from_dhcp_lease | awk '{$1="";print}')
+  for line in $dns_ip_list
+  do
+    echo "nameserver ${line}" >> /tmp/.rdbox-dns
+  done
+  source /opt/rdbox/boot/dns_from_dhcp_lease.bash wlan0
+  dns_ip_list=$(get_dns_from_dhcp_lease | awk '{$1="";print}')
+  for line in $dns_ip_list
+  do
+    echo "nameserver ${line}" >> /tmp/.rdbox-dns
+  done
+  dns_ip_list=$(< /etc/rdbox/network/interfaces.d/current/br0 grep dns-nameservers | awk '{$1="";print}')
+  for line in $dns_ip_list
+  do
+    if [ "$line" = "$first_addr_br0" ]; then
+      continue
+    fi
+    echo "nameserver ${line}" >> /tmp/.rdbox-dns
+  done
+  awk '!colname[$2]++{print $1" "$2}' /tmp/.rdbox-dns sudo tee /etc/rdbox/dnsmasq.resolver.conf
+  rm -rf /tmp/.rdbox-dns
+  touch /var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf
+  /bin/systemctl enable dnsmasq.service
+  /bin/systemctl restart dnsmasq.service
+  # config bind9
+  {
+    echo 'options {'
+    echo '        directory "/var/cache/bind";'
+    echo ""
+    echo "        listen-on port 53 { 127.0.0.1; ${ip_br0_with_cidr}; };"
+    echo "        listen-on-v6 { none; };"
+    echo ""
+    echo "        forward only;"
+    echo "        forwarders  { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo ""
+    echo "        dnssec-validation no;"
+    echo "        auth-nxdomain no;"
+    echo "        version none;"
+    echo "};"
+    echo ""
+    echo "zone ${fname} IN {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone ${rdbox_domain} IN {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone ${ip_vpnrdbox_fourth}.168.192.in-addr.arpa {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo ""
+    echo "zone hq.${fname} IN {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone 0.168.192.in-addr.arpa {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone 1.168.192.in-addr.arpa {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone 2.168.192.in-addr.arpa {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${first_addr_vpnrdbox} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+    echo "zone 3.168.192.in-addr.arpa {"
+    echo "        type forward;"
+    echo "        forward only;"
+    echo "        forwarders { ${first_addr_vpnrdbox}  port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "};"
+  } > /etc/bind/named.conf.options
+  /bin/systemctl enable bind9
+  /bin/systemctl restart bind9
+  #################################################################
   mkdir -p /usr/local/share/rdbox
   echo "/usr/local/share/rdbox $(ip route | grep br0 | awk '{print $1}')(rw,sync,no_subtree_check,no_root_squash,no_all_squash)" >> /etc/exports
   exportfs -ra
@@ -305,12 +272,7 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
     /bin/systemctl stop transproxy.service
   fi
   ## For VPN.
-  /bin/systemctl enable softether-vpnbridge.service
-  /bin/systemctl restart softether-vpnbridge.service
-  sleep 30
-  sed -i -e '/BridgeCreate BRIDGE/c\BridgeCreate BRIDGE /DEVICE:br0 /TAP:yes' /usr/local/etc/vpnbridge.in
-  /usr/bin/vpncmd localhost:443 -server -in:/usr/local/etc/vpnbridge.in
-  /bin/systemctl restart softether-vpnbridge.service
+  /bin/systemctl restart softether-vpnclient.service
   ## For RDBOX.
   /usr/bin/touch /etc/rdbox/hostapd_be.deny
   sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
@@ -321,7 +283,6 @@ elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
-  check_active_yoursite_wifi
   if $is_active_yoursite_wifi; then
     echo "alive monitoring: wpa and hostapd."
   else
@@ -358,11 +319,7 @@ elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   sed -i "/^#bssid_blacklist$/c bssid_blacklist=$(/sbin/ifconfig awlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}')" /etc/rdbox/wpa_supplicant_be.conf
   /bin/systemctl enable rdbox-boot.service
   /bin/systemctl restart rdbox-boot.service
-  /sbin/dhclient br0
-  if [ "$(/sbin/ip -f inet -o addr show wlan0 | cut -d\  -f 7 | cut -d/ -f 1 | wc -l)" -gt 0 ]; then
-    /sbin/dhclient br0
-  fi
-  sleep 10
+  wait_dhclient br0
   if [ ! -s "/etc/resolv.conf" ]; then
     unlink /etc/resolv.conf || :
     rm -rf /etc/resolv.conf || :
@@ -386,9 +343,8 @@ else
   /bin/systemctl start sshd.service
   /sbin/ifup wlan0
   if [ "$(/sbin/ip -f inet -o addr show wlan0 | cut -d\  -f 7 | cut -d/ -f 1 | wc -l)" -gt  0 ] ; then
-    /sbin/dhclient wlan0
+    wait_dhclient wlan0
   fi
-  sleep 10
   if [ ! -s "/etc/resolv.conf" ]; then
     unlink /etc/resolv.conf || :
     rm -rf /etc/resolv.conf || :

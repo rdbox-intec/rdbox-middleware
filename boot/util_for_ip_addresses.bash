@@ -50,7 +50,7 @@ cidr_default_gw () {
   ip=$(ip4_to_int "$(cidr_ip "$1")")
   prefix=$(cidr_prefix "$1")
   netmask=$(netmask_of_prefix "$prefix")
-  gw=$((ip & netmask + 1))
+  gw=$(((ip & netmask) + 1))
   int_to_ip4 $gw
 }
 
@@ -105,4 +105,18 @@ ipmax() {
   local max
   max=$(iplist "$1" "$2" | tr '\n' ' ' | awk '{print $NF}')
   echo "$max"
+}
+
+cidr_netmask () {
+  local ip
+  local prefix
+  local netmask
+  local gw
+  ip=$(ip4_to_int "$(cidr_ip "$1")")
+  prefix=$(cidr_prefix "$1")
+  netmask=$(netmask_of_prefix "$prefix")
+  gw=$((ip & netmask))
+  local cidr
+  cidr=$(int_to_ip4 $gw)
+  echo "$cidr"/"$prefix"
 }

@@ -31,11 +31,12 @@ do
     success=$((success + 1))
     if [ "$success" -eq $SUCCESS_THRESHOLD ]; then
       sudo kubeadm join "$@"
-      mkdir -p /home/"$(ls /home)"/.kube/
-      scp -o "StrictHostKeyChecking=no" $remote_user@"$IP_K8S_MASTER":/home/$remote_user/.kube/config /home/"$(ls /home)"/.kube/config
-      sleep 30
-      kubectl label node "$(hostname)" node.rdbox.com/location=edge
-      kubectl label node "$(hostname)" node.rdbox.com/edge=$rdbox_type
+      mkdir -p /home/$remote_user/.kube/
+      scp -i /home/$remote_user/.ssh/id_rsa -o "StrictHostKeyChecking=no" $remote_user@"$IP_K8S_MASTER":/home/$remote_user/.kube/config /home/$remote_user/.kube/config
+      chown $remote_user:$remote_user /home/$remote_user/.kube/config
+      sleep 15
+      kubectl label node "$(hostname)" node.rdbox.com/location=edge --kubeconfig /home/$remote_user/.kube/config
+      kubectl label node "$(hostname)" node.rdbox.com/edge=$rdbox_type --kubeconfig /home/$remote_user/.kube/config
       exit 0
     fi
     sleep 1

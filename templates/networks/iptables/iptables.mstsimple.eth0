@@ -14,25 +14,18 @@ iptables -A OUTPUT -o lo -j ACCEPT
 ###########
 #mesh wifi
 ###########
-iptables -A INPUT -i wlan0 -j ACCEPT
+iptables -A INPUT -i awlan1 -j ACCEPT
 iptables -A INPUT -i awlan0 -j ACCEPT
 
-iptables -A FORWARD --match physdev --physdev-in wlan0 --physdev-is-bridged --physdev-out tap_tap0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in tap_tap0 --physdev-is-bridged --physdev-out wlan0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in wlan0 --physdev-is-bridged --physdev-out tap_br0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in tap_br0 --physdev-is-bridged --physdev-out wlan0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in wlan0 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out wlan0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out tap_tap0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in tap_tap0 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out tap_br0 -j ACCEPT
-iptables -A FORWARD --match physdev --physdev-in tap_br0 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in awlan1 --physdev-is-bridged --physdev-out bat0 -j ACCEPT
+iptables -A FORWARD --match physdev --physdev-in bat0 --physdev-is-bridged --physdev-out awlan1 -j ACCEPT
 
 
+iptables -A INPUT -f -j ACCEPT
 iptables -A INPUT -p tcp ! --syn -m state --state NEW -j DROP
 iptables -A INPUT -p tcp -m state --state NEW,ESTABLISHED,RELATED --dport 80 -j ACCEPT
 iptables -A OUTPUT -p tcp --sport 80 -j ACCEPT
-iptables -A INPUT -p tcp -m state --state NEW,ESTABLISHED,RELATED --dport 443 -j ACCEPT
+iptables -A INPUT -p tcp -m tcp --dport 443 -j ACCEPT
 iptables -A OUTPUT -p tcp --sport 443 -j ACCEPT
 iptables -A INPUT -p tcp -m state --state NEW,ESTABLISHED,RELATED --dport 8080 -j ACCEPT
 iptables -A OUTPUT -p tcp --sport 8080 -j ACCEPT
@@ -58,15 +51,21 @@ iptables -A OUTPUT -o cni0 -j ACCEPT
 iptables -A FORWARD -i cni0 -j ACCEPT
 iptables -A FORWARD -o cni0 -j ACCEPT
 
+################
+#VPN Router
+###############
+iptables -A INPUT -i vpn_rdbox -p tcp --dport 22 -j DROP
+iptables -A FORWARD -i vpn_rdbox -p tcp --dport 22 -j DROP
+iptables -A INPUT -i vpn_rdbox -j ACCEPT
+iptables -A OUTPUT -o vpn_rdbox -j ACCEPT
+iptables -A FORWARD -i vpn_rdbox -j ACCEPT
+iptables -A FORWARD -o vpn_rdbox -j ACCEPT
+
 #################
 #SNAT(masquerade)
 #################
 iptables -t nat -A POSTROUTING -o eth0 -j MASQUERADE
-
-###########
-#VPNBridge
-###########
-iptables -A INPUT -i tap_tap0 -j ACCEPT
+iptables -t nat -A POSTROUTING -o vpn_rdbox -j MASQUERADE
 
 #########
 #logging
