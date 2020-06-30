@@ -2,6 +2,9 @@
 export LC_ALL=C
 export LANG=C
 
+source /opt/rdbox/boot/util_for_network_connection.bash
+source /opt/rdbox/boot/util_for_ip_addresses.bash
+
 SSHD_TIMEOUT=120
 WPA_AUTH_TIMEOUT=30
 HOSTAPD_TIMEOUT=30
@@ -11,6 +14,7 @@ regex_slave='^.*slave.*'
 regex_simplexmst='^.*simplexmst.*'
 regex_simplexslv='^.*simplexslv.*'
 is_simple_mesh=false
+rdbox_type=''
 hname=$(/bin/hostname)
 RETRY_COUNT=5
 WPA_LOG=/var/log/rdbox/rdbox_boot_wpa.log
@@ -31,6 +35,43 @@ check_active_yoursite_wifi () {
     is_active_yoursite_wifi=true
     return 0
   fi
+}
+
+check_active_default_gw () {
+  isActive=$(route | grep -c default)
+  if [ "$isActive" = 0 ]; then
+    echo "Not set Default gw"
+    return 10
+  else
+    echo "Already set default gw"
+  fi
+  return 0
+}
+
+update_dnsinfo () {
+  _addr_br0=$(/sbin/ifconfig br0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}')
+  source /opt/rdbox/boot/dns_from_dhcp_lease.bash eth0
+  dns_ip_list=$(get_dns_from_dhcp_lease | awk '{$1="";print}')
+  for line in $dns_ip_list
+  do
+    echo "nameserver ${line}" >> /tmp/.rdbox-dns
+  done
+  source /opt/rdbox/boot/dns_from_dhcp_lease.bash wlan0
+  dns_ip_list=$(get_dns_from_dhcp_lease | awk '{$1="";print}')
+  for line in $dns_ip_list
+  do
+    echo "nameserver ${line}" >> /tmp/.rdbox-dns
+  done
+  dns_ip_list=$(< /etc/rdbox/network/interfaces.d/current/br0 grep dns-nameservers | awk '{$1="";print}')
+  for line in $dns_ip_list
+  do
+    if [ "$line" = "$_addr_br0" ]; then
+      continue
+    fi
+    echo "nameserver ${line}" >> /tmp/.rdbox-dns
+  done
+  awk '!colname[$2]++{print $1" "$2}' /tmp/.rdbox-dns | tee /etc/rdbox/dnsmasq.resolver.conf
+  rm -rf /tmp/.rdbox-dns
 }
 
 discrimination_model () {
@@ -89,27 +130,6 @@ check_batman () {
       echo "BATMAN is Bad."
       return 10
   fi
-  return 0
-}
-
-wait_dhclient () {
-  sleep 10
-  COUNT=0
-  while true
-  do
-    if /sbin/dhclient -1 "$1"; then
-      echo "dhclient is running."
-      break
-    else
-      echo "wait dhclient..."
-    fi
-    if [ $COUNT -eq $RETRY_COUNT ]; then
-      echo "dhclient RETRY OVER!"
-      return 8
-    fi
-    sleep 10
-    COUNT=$((COUNT + 1))
-  done
   return 0
 }
 
@@ -181,24 +201,6 @@ check_device_simple () {
   return 0
 }
 
-watch_wifi () {
-  current_time=$1
-  while read -rt ${WPA_AUTH_TIMEOUT} line; do
-    echo "  $line"
-    if echo "$line" | grep -wq 'CTRL-EVENT-CONNECTED'; then
-      echo "  wifi OK!!"
-      return 0
-    fi
-    # judge timeout
-    if [ $(($(date +%s) - current_time)) -gt ${WPA_AUTH_TIMEOUT} ]; then
-      echo "  unmatch Timeout."
-      return 1
-    fi
-  done
-  echo "  read Timeout."
-  return 2
-}
-
 watch_hostapd () {
   current_time=$1
   while read -rt ${HOSTAPD_TIMEOUT} line; do
@@ -215,21 +217,6 @@ watch_hostapd () {
   done
   echo "  read Timeout."
   return 2
-}
-
-connect_wifi_with_timeout () {
-  # wpa #######################
-  current_time=$(date +%s)
-  /sbin/wpa_supplicant -B -f $WPA_LOG -P $PIDFILE_SUPLICANT -D nl80211 "$@"
-  rtn=1
-  { watch_wifi "$current_time"; rtn=$?; kill -s INT "$(pgrep -a tail | grep -v /usr/bin/timeout | grep $WPA_LOG | awk '{ print $1 }')"; } < <(/usr/bin/timeout --signal=HUP "$((WPA_AUTH_TIMEOUT + 10))"s /usr/bin/tail --follow=name --retry $WPA_LOG)
-  if [ $rtn -eq 0 ]; then
-    return 0
-  else
-    echo 'WPA authentication failed.'
-    pkill -INT -f wpa_supplicant
-    return 5
-  fi
 }
 
 startup_hostapd_with_timeout () {
@@ -386,15 +373,7 @@ _simplexmst_wifi_nomesh_hostapd () {
   fi
   return 0
 }
-_simplexmst_ether_common_connect () {
-  _ip_count=$(/sbin/ifconfig eth0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
-  if [ "$_ip_count" -eq 0 ]; then
-    if ! wait_dhclient eth0; then
-      return 6
-    fi
-  fi
-  return 0
-}
+
 _simplexmst_ether_simplemesh_hostapd () {
   # 1 dongle
   if ! iw dev wlan1 interface add awlan0 type __ap; then
@@ -413,8 +392,8 @@ _simplexmst_ether_simplemesh_hostapd () {
     return 5
   fi
   /bin/systemctl restart networking.service
-  source /etc/rdbox/network/iptables.mstsimple
-  _simplexmst_ether_common_connect
+  source /etc/rdbox/network/iptables.mstsimple.eth0
+  connect_ether
   ret=$?
   if [ "$ret" -gt 0 ]; then
     return 6
@@ -472,11 +451,11 @@ for_simplexmst () {
     else
       if $is_simple_mesh; then
         # 1 dongle
-        #_simplexmst_ether_common_connect
+        #connect_ether
         ret=0
       else
         # 0 dongle (Ethernet)
-        _simplexmst_ether_common_connect
+        connect_ether
         ret=$?
       fi
     fi
@@ -500,7 +479,7 @@ for_simplexmst () {
           ret=$?
         else
           # 0 dongle (Ethernet)
-          source /etc/rdbox/network/iptables.mstsimple
+          source /etc/rdbox/network/iptables.mstsimple.eth0
           sed -i -e '/^interface\=/c\interface\=wlan0' /etc/rdbox/hostapd_ap_bg.conf
           # hostapd #######################
           startup_hostapd_with_timeout /etc/rdbox/hostapd_ap_bg.conf
@@ -519,20 +498,25 @@ for_simplexmst () {
     COUNT=$((COUNT + 1))
   done
   # Success Connection
-  if wait_tap_device; then
-    /sbin/brctl addif br0 tap_br0
-  else
-    return 1
-  fi
   if $is_active_yoursite_wifi; then
     /sbin/brctl addif br0 eth0
   fi
+  /sbin/brctl addif br0 bat0
+  ip link set up dev bat0
   _ip_count=$(/sbin/ifconfig br0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
   if [ "$_ip_count" -eq 0 ]; then
     if ! wait_dhclient br0; then
       return 1
     fi
   fi
+  _ip_count=$(/sbin/ifconfig vpn_rdbox | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
+  if [ "$_ip_count" -eq 0 ]; then
+    if ! wait_dhclient vpn_rdbox; then
+      return 1
+    fi
+    ip link set vpn_rdbox mtu 1280
+  fi
+  update_dnsinfo
   return 0
 }
 
@@ -573,7 +557,11 @@ for_simplexslv () {
   if ! wait_dhclient br0; then
     return 1
   fi
+  ip_br0_with_cidr=$(ip -f inet -o addr show br0|cut -d\  -f 7 | tr -d '\n')
   /sbin/brctl addif br0 eth0
+  if ! check_active_default_gw; then
+    /sbin/route add default gw "$(cidr_default_gw "$ip_br0_with_cidr")"
+  fi
   return 0
 }
 

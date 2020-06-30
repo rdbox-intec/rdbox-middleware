@@ -20,7 +20,7 @@ install/rdbox::
 	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_be.conf $(DEB_DESTDIR)etc/rdbox/wpa_supplicant_be.conf.sapmle
 	install -pm 644 templates/networks/wpa_supplicant/wpa_supplicant_ap_bg.conf $(DEB_DESTDIR)etc/rdbox/wpa_supplicant_ap_bg.conf.sample
 	install -pm 644 templates/networks/iptables/iptables $(DEB_DESTDIR)etc/rdbox/network
-	install -pm 644 templates/networks/iptables/iptables.mstsimple $(DEB_DESTDIR)etc/rdbox/network
+	install -pm 644 templates/networks/iptables/iptables.mstsimple.eth0 $(DEB_DESTDIR)etc/rdbox/network
 	install -pm 644 templates/networks/iptables/iptables.mstsimple.wlan0 $(DEB_DESTDIR)etc/rdbox/network
 	install -pm 644 templates/networks/interface/interfaces $(DEB_DESTDIR)etc/rdbox/network
 	install -pm 644 templates/networks/interface/interfaces.d/master/bat0 $(DEB_DESTDIR)etc/rdbox/network/interfaces.d/master/bat0
@@ -72,6 +72,8 @@ install/rdbox::
 	install -pm 755 boot/to_run_kubeadm_join_after_communicating_with $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/sub_to_run_kubeadm_join_after_communicating_with.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 755 boot/util_for_ip_addresses.bash $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/util_for_network_connection.bash $(DEB_DESTDIR)opt/rdbox/boot
+	install -pm 755 boot/dns_from_dhcp_lease.bash $(DEB_DESTDIR)opt/rdbox/boot
 	install -pm 644 boot/.is_simple $(DEB_DESTDIR)var/lib/rdbox
 	# rdbox
 	install -pd $(DEB_DESTDIR)opt/rdbox/bin
