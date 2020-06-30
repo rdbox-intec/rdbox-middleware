@@ -3,6 +3,7 @@
 
 import rdbox.config
 import socket
+import re
 
 from logging import getLogger
 r_logger = getLogger('rdbox_cli')
@@ -13,12 +14,14 @@ class ClassifierForEnableDisableCommand(object):
 
     FUNCTYPES = "k8s_external_svc|temporary_cache_registry"
     FUNCTYPES_LIST = FUNCTYPES.split("|")
-    HELMTYPES = "onpremise-ingress-controller|temporary-cache-registry"
-    HELMTYPES_LIST = HELMTYPES.split("|")
+    HELMTYPES = "onpremise-ingress-controller/onpremise-blockstore|temporary-cache-registry"
+    HELMTYPES_LIST = re.split('[/|]', HELMTYPES)
+    HELMTYPES_MASS_LIST = HELMTYPES.split("|")
     FUNC_HELM_MAPPING = {}
 
     for index, _ in enumerate(FUNCTYPES_LIST):
-        FUNC_HELM_MAPPING[FUNCTYPES_LIST[index]] = HELMTYPES_LIST[index]
+        helm_list = HELMTYPES_MASS_LIST[index].split("/")
+        FUNC_HELM_MAPPING[FUNCTYPES_LIST[index]] = helm_list
 
     @classmethod
     def _validation(cls, function_type):

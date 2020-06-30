@@ -61,12 +61,11 @@ class ClassifierForInitCommand(object):
                 if cls._yes_no_input():
                     r_print.info("<<Step1. skip.>>")
                     cls._print_separator("#")
-                    r_print.info("<<Step2. skip.>>")
-                    pass
+                    cls._kubectl_create_ns(cls.KUBECTL_COMMON_CERT_NSPACE)
+                    cls._kubectl_secret_tls(key_path, crt_path)
                 else:
                     cls._gen_key(key_path, crt_path)
                     cls._print_separator("#")
-                    cls._kubectl_create_ns(cls.KUBECTL_COMMON_CERT_NSPACE)
                     cls._kubectl_secret_tls(key_path, crt_path)
             else:
                 cls._gen_key(key_path, crt_path)

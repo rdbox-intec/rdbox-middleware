@@ -5,10 +5,12 @@ docker-registry:
     beta.kubernetes.io/arch: "amd64"
   image:
     repository: registry
-    tag: "2"
-    pullPolicy: IfNotPresent
   securityContext:
     enabled: false
+  # PVC
+  persistence:
+    enabled: true
+    storageClass: "openebs-jiva-rdbox"
   # Ingress
   ingress:
     enabled: true

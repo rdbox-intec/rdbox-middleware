@@ -5,8 +5,17 @@ metallb:
 
 nginx-ingress:
   controller:
-    nodeSelector:
-      beta.kubernetes.io/arch: "amd64"
+    replicaCount: 2
+    affinity:
+      podAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchExpressions:
+            - key: app
+              operator: In
+              values:
+              - metallb
+          topologyKey: "node.rdbox.com/location"
   defaultBackend:
     nodeSelector:
       beta.kubernetes.io/arch: "amd64"
