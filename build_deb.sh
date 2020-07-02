@@ -11,6 +11,7 @@ fi
 version_no=$1
 architect_code=$2
 branch=$3
+
 git pull origin "${branch}"
 git checkout "${branch}"
 commit_id=$(git rev-parse HEAD)
@@ -23,11 +24,15 @@ git checkout master
 git tag -d upstream/"${version_no}"
 gbp import-orig --no-merge -u "${version_no}" --pristine-tar ../rdbox_"${version_no}".orig.tar.gz
 git checkout dfsg_clean
-git pull . upstream
+git pull --no-edit . upstream
 git checkout master
-git pull . dfsg_clean
+git pull --no-edit . dfsg_clean
 rm -rf ../build-area/
-gbp buildpackage --git-pristine-tar-commit --git-export-dir=../build-area -S -sd
+if ! gbp buildpackage --git-pristine-tar-commit --git-export-dir=../build-area -S -sd;
+then
+  echo "Retry Over."
+  exit 1
+fi
 
 # need sudo
 if [ "$architect_code" = "armhf" ]; then
