@@ -190,7 +190,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
     fi
     echo "nameserver ${line}" >> /tmp/.rdbox-dns
   done
-  awk '!colname[$2]++{print $1" "$2}' /tmp/.rdbox-dns sudo tee /etc/rdbox/dnsmasq.resolver.conf
+  awk '!colname[$2]++{print $1" "$2}' /tmp/.rdbox-dns | tee /etc/rdbox/dnsmasq.resolver.conf
   rm -rf /tmp/.rdbox-dns
   touch /var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf
   /bin/systemctl enable dnsmasq.service
@@ -307,7 +307,10 @@ elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -f /etc/rdbox/network/interfaces.d/simplexslv/* /etc/rdbox/network/interfaces.d/current
+  mv /etc/network/interfaces.d /etc/network/interfaces.d.bak
+  ln -fs /etc/rdbox/network/interfaces.d/current /etc/network/interfaces.d
   /sbin/ifconfig wlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
+  cp -rf /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/.original.hostapd_ap_bg.conf
   sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_ap_bg.conf
@@ -331,6 +334,7 @@ elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   fi
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
+  cp -rf /etc/dhcp/dhclient.conf /etc/dhcp/.original.dhclient.conf
   sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
   systemctl enable ntp.service
   systemctl restart ntp.service
@@ -340,6 +344,8 @@ else
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/others/* /etc/rdbox/network/interfaces.d/current
+  mv /etc/network/interfaces.d /etc/network/interfaces.d.bak
+  ln -fs /etc/rdbox/network/interfaces.d/current /etc/network/interfaces.d
   ln -fs /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service

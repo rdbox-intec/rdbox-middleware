@@ -133,50 +133,6 @@ check_batman () {
   return 0
 }
 
-wait_tap_device () {
-  COUNT=0
-  while true
-  do
-    if ifconfig tap_br0 > /dev/null 2>&1; then
-      echo "tap_br0 is already up."
-      break
-    else
-      echo "wait tap_br0..."
-    fi
-    if [ $COUNT -eq $RETRY_COUNT ]; then
-      echo "Device named 'tap_br0' not found."
-      return 8
-    fi
-    sleep 10
-    COUNT=$((COUNT + 1))
-  done
-  return 0
-}
-
-check_device_full () {
-  if ! ifconfig eth0 > /dev/null 2>&1; then
-    echo "Device named 'eth0' not found."
-    return 8
-  fi
-  if ! iwconfig wlan1 > /dev/null 2>&1; then
-    echo "Device named 'wlan1' not found."
-    return 8
-  fi
-  if ! iwconfig wlan2 > /dev/null 2>&1; then
-    echo "Device named 'wlan2' not found."
-    return 8
-  fi
-  if ! iwconfig wlan3 > /dev/null 2>&1; then
-    echo "Device named 'wlan3' not found."
-    return 8
-  fi
-  if ! iwconfig wlan4 > /dev/null 2>&1; then
-    echo "Device named 'wlan4' not found."
-    return 8
-  fi
-  return 0
-}
-
 check_device_simple () {
   if ! ifconfig eth0 > /dev/null 2>&1; then
     echo "Device named 'eth0' not found."
@@ -250,78 +206,6 @@ generate_MACAddress () {
     fi
   done
   echo "${_tmp_addr//[\r\n]\+//}"
-}
-
-for_master () {
-  COUNT=0
-  if ! check_device_full; then
-    /bin/echo "Do not check device!"
-    return 2
-  fi
-  while true; do
-    pkill -INT -f hostapd
-    pkill -INT -f wpa_supplicant
-    sleep 10
-    # hostapd #######################
-    if startup_hostapd_with_timeout /etc/rdbox/hostapd_be.conf /etc/rdbox/hostapd_ap_an.conf /etc/rdbox/hostapd_ap_bg.conf; then
-      # wpa_supplicant ##############
-      sleep 10
-      if connect_wifi_with_timeout -i wlan1 -c /etc/rdbox/wpa_supplicant_be.conf; then
-        break
-      fi
-      sleep 10
-    fi
-    if [ $COUNT -eq $RETRY_COUNT ]; then
-      echo "Master Process RETRY OVER!"
-      return 1
-    fi
-    COUNT=$((COUNT + 1))
-  done
-  _ip_count=$(/sbin/ifconfig br0 | grep 'inet' | cut -d: -f2 | awk '{ print $2}' | wc -l)
-  if [ "$_ip_count" -eq 0 ]; then
-    if ! wait_dhclient br0; then
-      return 1
-    fi
-  fi
-  return 0
-}
-
-for_slave () {
-  COUNT=0
-  check_device_full
-  if ! check_device_full; then
-    /bin/echo "Do not check device!"
-    return 2
-  fi
-  while true; do
-    pkill -INT -f hostapd
-    pkill -INT -f wpa_supplicant
-    sleep 10
-    # wpa_supplicant ##############
-    if connect_wifi_with_timeout -i wlan1 -c /etc/rdbox/wpa_supplicant_be.conf; then
-      ifdown br0 && ifup br0
-      # hostapd #######################
-      sleep 10
-      if startup_hostapd_with_timeout /etc/rdbox/hostapd_be.conf /etc/rdbox/hostapd_ap_an.conf /etc/rdbox/hostapd_ap_bg.conf; then
-        break
-      fi
-      sleep 10
-    fi
-    if [ $COUNT -eq $RETRY_COUNT ]; then
-        echo "Slave Process RETRY OVER!"
-        return 1
-    fi
-    COUNT=$((COUNT + 1))
-  done
-  # Success Connection
-  if ! check_batman; then
-    return 1
-  fi
-  if ! wait_dhclient br0; then
-    return 1
-  fi
-  /sbin/brctl addif br0 eth0
-  return 0
 }
 
 _simplexmst_wifi_simplemesh_wpa () {
@@ -574,13 +458,7 @@ bootup () {
     exit 1
   fi
   ret=9
-  if [[ $rdbox_type =~ $regex_master ]]; then
-    for_master
-    ret=$?
-  elif [[ $rdbox_type =~ $regex_slave ]]; then
-    for_slave
-    ret=$?
-  elif [[ $rdbox_type =~ $regex_simplexmst ]]; then
+  if [[ $rdbox_type =~ $regex_simplexmst ]]; then
     for_simplexmst
     ret=$?
   elif [[ $rdbox_type =~ $regex_simplexslv ]]; then

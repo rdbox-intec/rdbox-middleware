@@ -85,8 +85,18 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   mv /etc/network/interfaces.org /etc/network/interfaces
 elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   echo "slave"
+  mv /etc/dhcp/.original.dhclient.conf /etc/dhcp/dhclient.conf
+  systemctl disable ntp.service
+  systemctl disable rdbox-boot.service
+  mv /etc/rdbox/.original.hostapd_ap_bg.conf /etc/rdbox/hostapd_ap_bg.conf
 else
   echo "other"
+  unlink /etc/wpa_supplicant/wpa_supplicant.conf
+  unlink /etc/network/interfaces.d
+  unlink /etc/network/interfaces
+  mv /etc/network/interfaces.d.bak /etc/network/interfaces.d
+  mv /etc/network/interfaces.org /etc/network/interfaces
+  systemctl disable ntp.service
 fi
 
 ## Statement reset
