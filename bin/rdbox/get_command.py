@@ -11,6 +11,7 @@ from rdbox.rdbox_node_report import RdboxNodeReport
 from rdbox.rdbox_node_list import RdboxNodeList
 from rdbox.ansible_rdbox_node_formatter import AnsibleRdboxNodeFormatter
 from rdbox.etchosts_rdbox_node_formatter import EtchostsRdboxNodeFormatter
+from rdbox.blockstore_rdbox_node_formatter import BlockstoreRdboxNodeFormatter
 
 
 class GetCommand(object):
@@ -68,13 +69,15 @@ class GetCommandBuilder(object):
     def setting(self):
         raise(IOError)
 
-    def build(self, format_type):
+    def build(self, format_type=None):
         self.setting()
         from rdbox.classifier_for_get_command import ClassifierForGetCommand
         if format_type == ClassifierForGetCommand.FORMAT_LIST[1]:
             self.convert_report_data_algorithm = AnsibleRdboxNodeFormatter()
         elif format_type == ClassifierForGetCommand.FORMAT_LIST[2]:
             self.convert_report_data_algorithm = EtchostsRdboxNodeFormatter()
+        else:
+            pass
         return GetCommand(self.intermediate_data,
                           self.final_data,
                           self.report_data,
@@ -96,6 +99,21 @@ class GetCommandNode(GetCommandBuilder):
         self.set_convert_intermediate_data_algorithm(
             K8sResponseHelperV1NodeList())
         self.set_convert_report_data_algorithm(AnsibleRdboxNodeFormatter())
+
+
+class GetCommandBlockstoreCount(GetCommandBuilder):
+    def setting(self):
+        self.set_intermediate_data(K8sResponseExternalList)
+        self.set_final_data(RdboxNodeList)
+        self.set_report_data(RdboxNodeReport)
+        ###
+        k8s_client_list = K8sClientList()
+        k8s_client_list.add(K8sClientCoreV1Api("list_node"))
+        self.set_collect_input_data_algorithm(k8s_client_list)
+        ###
+        self.set_convert_intermediate_data_algorithm(
+            K8sResponseHelperV1NodeList())
+        self.set_convert_report_data_algorithm(BlockstoreRdboxNodeFormatter())
 
 
 class GetCommandK8sExternalSvc(GetCommandBuilder):

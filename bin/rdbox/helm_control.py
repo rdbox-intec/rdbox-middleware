@@ -123,7 +123,7 @@ class HelmControl(object):
         sets = ""
         set_dict = {}
         if set_string != "not_set":
-            set_list = set_string(",")
+            set_list = set_string.split(",")
             for item in set_list:
                 k_v = item.split("=")
                 if len(k_v) == 2:

@@ -19,11 +19,14 @@ class ClassifierForDisableCommand(ClassifierForEnableDisableCommand):
         if cls._validation(args.function_type) is False:
             return False
         # helm
-        helm_chart_name = cls._map_func_to_helm(args.function_type)
+        helm_chart_name_list = cls._map_func_to_helm(args.function_type)
         helm = HelmControl()
-        is_success = helm.delete_all(helm_chart_name, args)
-        if not is_success:
-            return False
+        for index, helm_chart_name in enumerate(helm_chart_name_list):
+            r_print.info('###### helm job {idx}/{total} ######'.format(idx=str(index + 1), total=str(len(helm_chart_name_list))))
+            is_success = helm.delete_all(helm_chart_name, args)
+            if not is_success:
+                return False
+        r_print.info('###### characteristic job for {func} ######'.format(func=args.function_type))
         if args.function_type == cls.FUNCTYPES_LIST[0]:
             # add cron
             c = CrontabControl()
