@@ -1,0 +1,6 @@
+dependencies:
+- name: kubeapps
+  repository: https://charts.bitnami.com/bitnami
+  version: 3.9.0
+digest: sha256:07b02dbe07817f96533012592199fb5ce01a166781d073f11f335bc13a26f8c2
+generated: "2020-08-21T13:56:46.943237607+09:00"

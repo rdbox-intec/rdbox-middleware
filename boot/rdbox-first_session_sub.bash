@@ -302,6 +302,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   apt update
   snap install helm --classic
   helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+  helm repo add bitnami https://charts.bitnami.com/bitnami
 elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv -n /etc/network/interfaces /etc/network/interfaces.org

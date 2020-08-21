@@ -1,0 +1,4 @@
+dependencies:
+  - name: kubeapps
+    version: 3.9.0
+    repository: https://charts.bitnami.com/bitnami
