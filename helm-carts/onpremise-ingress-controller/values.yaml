@@ -2,6 +2,11 @@ address: "192.168.179.12-192.168.179.24"
 
 metallb:
   existingConfigMap: metallb-config
+  controller:
+    nodeSelector:
+      beta.kubernetes.io/arch: "amd64"
+      kubernetes.io/os: "linux"
+      node.rdbox.com/location: "hq"
 
 nginx-ingress:
   controller:

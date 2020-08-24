@@ -14,7 +14,7 @@ class ClassifierForEnableDisableCommand(object):
 
     FUNCTYPES = "k8s_external_svc|temporary_cache_registry"
     FUNCTYPES_LIST = FUNCTYPES.split("|")
-    HELMTYPES = "onpremise-ingress-controller/onpremise-blockstore|temporary-cache-registry"
+    HELMTYPES = "onpremise-ingress-controller/onpremise-blockstore/onpremise-market|temporary-cache-registry"
     HELMTYPES_LIST = re.split('[/|]', HELMTYPES)
     HELMTYPES_MASS_LIST = HELMTYPES.split("|")
     FUNC_HELM_MAPPING = {}
