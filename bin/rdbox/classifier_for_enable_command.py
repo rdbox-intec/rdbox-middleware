@@ -30,6 +30,7 @@ class ClassifierForEnableCommand(ClassifierForEnableDisableCommand):
         helm = HelmControl()
         if args.function_type == cls.FUNCTYPES_LIST[0]:
             for index, helm_chart_name in enumerate(helm_chart_name_list):
+                r_print.info('')
                 r_print.info('###### helm job {idx}/{total} {chartname} ######'.format(idx=str(index + 1), total=str(len(helm_chart_name_list)), chartname=helm_chart_name))
                 if helm_chart_name == cls.HELMTYPES_LIST[1]:
                     cls._set_replica_count_to_args(args)
@@ -45,6 +46,7 @@ class ClassifierForEnableCommand(ClassifierForEnableDisableCommand):
                 return False
         elif args.function_type == cls.FUNCTYPES_LIST[1]:
             for index, helm_chart_name in enumerate(helm_chart_name_list):
+                r_print.info('')
                 r_print.info('###### helm job {idx}/{total} ######'.format(idx=str(index + 1), total=str(len(helm_chart_name_list))))
                 is_success = helm.install_all(helm_chart_name, args)
                 if not is_success:
@@ -63,7 +65,6 @@ class ClassifierForEnableCommand(ClassifierForEnableDisableCommand):
                 return False
             cls._print_complete_message(cache_url)
         #############
-        print("Finish!!")
         return True
 
     @classmethod

@@ -1,4 +1,4 @@
 dependencies:
   - name: docker-registry
-    version: 1.9.2
+    version: 1.9.4
     repository: https://kubernetes-charts.storage.googleapis.com

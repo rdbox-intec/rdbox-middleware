@@ -6,6 +6,8 @@ Tip:
 
 To access Kubeapps from outside your K8s cluster, follow the steps below:
 
-1. Get the Kubeapps URL and associate Kubeapps hostname to your cluster external IP:
+1. Get the Kubeapps URL:
+
+   "Kubeapps URL: https://{{ .Values.kubeapps.ingress.hostname }}/"
 
 2. Open a browser and access Kubeapps using the obtained URL.

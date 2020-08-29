@@ -52,9 +52,12 @@ class ClassifierForInitCommand(object):
                 cls.OPENSSL_KEY_CERT_DIRPATH, cls.OPENSSL_CRT_NAME)
         with open(crt_path) as file:
             text = file.read()
+            r_print.info("")
             r_print.info("A server certificate for RDBOX external services.")
-            r_print.info("Add this to your operating system's trust list.")
-            r_print.info('echo ' + '"' + text + '" > ' + 'Rdbox-Common-Tls.crt')
+            r_print.info("Add it to your operating system and browser trust list.")
+            r_print.info("")
+            r_print.info('$ echo ' + '"' + text + '" > ' + 'Rdbox-Common-Tls.crt')
+            r_print.info("")
         r_print.info("Finish!!")
         return True
 

@@ -215,7 +215,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
     echo "zone ${fname} IN {"
     echo "        type forward;"
     echo "        forward only;"
-    echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "        forwarders { 192.168.1.179 port ${DNS_AUTHORITATIVE_PORT}; };"
     echo "};"
     echo "zone ${rdbox_domain} IN {"
     echo "        type forward;"
