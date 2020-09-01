@@ -49,4 +49,6 @@ else
   sudo OS=raspbian DIST=buster ARCH=armhf pbuilder --build ../build-area/rdbox_"${version_no}".dsc
 fi
 
+cd ../rdbox-middleware/ || exit
+
 exit 0
