@@ -56,15 +56,13 @@ jobs:
     - name: Build deb packages.
       run: |
         echo ::set-env name=RELEASE_VERSION::${GITHUB_REF#refs/*/}
-        ONLY_NO_VER=$(cut -d'v' -f 2 <<<${RELEASE_VERSION})
-        bash ./build_deb_cloud.sh ${ONLY_NO_VER} armhf
-        bash ./build_deb_cloud.sh ${ONLY_NO_VER} amd64
+        bash ./build_deb_cloud.sh $(cut -d'v' -f 2 <<<${RELEASE_VERSION}) armhf
+        bash ./build_deb_cloud.sh $(cut -d'v' -f 2 <<<${RELEASE_VERSION}) amd64
       shell: bash
     - name: Publish deb packages.
       run: |
-        ONLY_NO_VER=$(cut -d'v' -f 2 <<<${RELEASE_VERSION})
-        bash ./publish_deb.sh ${ONLY_NO_VER} armhf
-        bash ./publish_deb.sh ${ONLY_NO_VER} amd64
+        bash ./publish_deb.sh $(cut -d'v' -f 2 <<<${RELEASE_VERSION}) armhf
+        bash ./publish_deb.sh $(cut -d'v' -f 2 <<<${RELEASE_VERSION}) amd64
       shell: bash
     env:
       GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
