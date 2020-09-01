@@ -16,6 +16,7 @@ architect_code=$2
 commit_id=$(git rev-parse HEAD)
 git archive --format=tar.gz --prefix=rdbox/ -o ../rdbox_"${version_no}".orig.tar.gz "${commit_id}"
 
+rm -rf ../rdbox-middleware-deb
 cp -rf ../rdbox-middleware ../rdbox-middleware-deb
 cd ../rdbox-middleware-deb/ || exit
 git config --global user.name "rdbox-bot"
