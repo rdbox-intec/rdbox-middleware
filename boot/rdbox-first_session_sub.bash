@@ -81,7 +81,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
     echo 'SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="dc:a6:32:??:??:??", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="wlan*", NAME="wlan0"'
   } > /etc/udev/rules.d/70-persistent-net.rules
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
-  mv -n /etc/network/interfaces /etc/network/interfaces.org
+  mv /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/simplexmst/* /etc/rdbox/network/interfaces.d/current
   mv /etc/network/interfaces.d /etc/network/interfaces.d.bak
@@ -145,6 +145,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   dhcp_max_addr=$(cidr_default_gw_2 "$ip_br0_with_cidr")
   rdbox_domain=${hostname_arr[${HOSTNAME_PART['SUFFIX']}]}.${fname}
   # config dnsmqsq
+  cp -rf /etc/rdbox/dnsmasq.conf /etc/rdbox/.original.dnsmasq.conf
   {
     echo "interface=br0"
     echo "interface=vpn_rdbox"
@@ -189,12 +190,13 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
     fi
     echo "nameserver ${line}" >> /tmp/.rdbox-dns
   done
-  awk '!colname[$2]++{print $1" "$2}' /tmp/.rdbox-dns sudo tee /etc/rdbox/dnsmasq.resolver.conf
+  awk '!colname[$2]++{print $1" "$2}' /tmp/.rdbox-dns | tee /etc/rdbox/dnsmasq.resolver.conf
   rm -rf /tmp/.rdbox-dns
   touch /var/lib/rdbox/dnsmasq.k8s_external_svc.hosts.conf
   /bin/systemctl enable dnsmasq.service
   /bin/systemctl restart dnsmasq.service
   # config bind9
+  cp -rf /etc/bind/named.conf.options /etc/bind/.original.named.conf.options
   {
     echo 'options {'
     echo '        directory "/var/cache/bind";'
@@ -213,7 +215,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
     echo "zone ${fname} IN {"
     echo "        type forward;"
     echo "        forward only;"
-    echo "        forwarders { ${ip_br0} port ${DNS_AUTHORITATIVE_PORT}; };"
+    echo "        forwarders { 192.168.1.179 port ${DNS_AUTHORITATIVE_PORT}; };"
     echo "};"
     echo "zone ${rdbox_domain} IN {"
     echo "        type forward;"
@@ -275,6 +277,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   /bin/systemctl restart softether-vpnclient.service
   ## For RDBOX.
   /usr/bin/touch /etc/rdbox/hostapd_be.deny
+  cp /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/.original.hostapd_ap_bg.conf
   sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_ap_bg.conf
@@ -283,6 +286,7 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_be.conf
   sed -i -e '/^hw_mode\=/c\hw_mode\=g' /etc/rdbox/hostapd_be.conf
+  cp /lib/systemd/system/rdbox-boot.service /lib/systemd/system/.original.rdbox-boot.service
   if $is_active_yoursite_wifi; then
     echo "alive monitoring: wpa and hostapd."
   else
@@ -298,12 +302,16 @@ if [[ $rdbox_type =~ $regex_simplexmst ]]; then
   apt update
   snap install helm --classic
   helm repo add stable https://kubernetes-charts.storage.googleapis.com/
+  helm repo add bitnami https://charts.bitnami.com/bitnami
 elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   /usr/sbin/hwinfo --wlan | /bin/grep "SysFS ID" | /bin/grep "usb" | /bin/sed -e 's/^[ ]*//g' | /usr/bin/awk '{print $3}' | /usr/bin/awk -F "/" '{ print $NF }' | /usr/bin/python /opt/rdbox/boot/rdbox-bind_unbind_dongles.py
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -f /etc/rdbox/network/interfaces.d/simplexslv/* /etc/rdbox/network/interfaces.d/current
+  mv /etc/network/interfaces.d /etc/network/interfaces.d.bak
+  ln -fs /etc/rdbox/network/interfaces.d/current /etc/network/interfaces.d
   /sbin/ifconfig wlan0 | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' > /etc/rdbox/hostapd_be.deny
+  cp -rf /etc/rdbox/hostapd_ap_bg.conf /etc/rdbox/.original.hostapd_ap_bg.conf
   sed -i -e '/^interface\=/c\interface\=awlan1' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^ht\_capab\=/c\ht_capab\=\[HT40\]\[SHORT\-GI\-20\]' /etc/rdbox/hostapd_ap_bg.conf
   sed -i -e '/^channel\=/c\channel\=1' /etc/rdbox/hostapd_ap_bg.conf
@@ -327,6 +335,7 @@ elif [[ $rdbox_type =~ $regex_simplexslv ]]; then
   fi
   /bin/systemctl disable systemd-networkd-wait-online.service
   /bin/systemctl mask systemd-networkd-wait-online.service
+  cp -rf /etc/dhcp/dhclient.conf /etc/dhcp/.original.dhclient.conf
   sed -i '/^#timeout 60;$/c timeout 5;' /etc/dhcp/dhclient.conf
   systemctl enable ntp.service
   systemctl restart ntp.service
@@ -336,6 +345,8 @@ else
   mv -n /etc/network/interfaces /etc/network/interfaces.org
   ln -fs /etc/rdbox/network/interfaces /etc/network/interfaces
   cp -n /etc/rdbox/network/interfaces.d/others/* /etc/rdbox/network/interfaces.d/current
+  mv /etc/network/interfaces.d /etc/network/interfaces.d.bak
+  ln -fs /etc/rdbox/network/interfaces.d/current /etc/network/interfaces.d
   ln -fs /etc/rdbox/wpa_supplicant_ap_bg.conf /etc/wpa_supplicant/wpa_supplicant.conf
   /bin/systemctl stop sshd.service
   /bin/systemctl stop networking.service
@@ -380,6 +391,7 @@ if [ -e '/boot/id_rsa.pub' ]; then
   rm -rf /boot/id_rsa.pub
 fi
 
+cp -rf /etc/motd /etc/.original.motd
 sed -i "s/HypriotOS/RDBOX based on HypriotOS/g" /etc/motd
 sed -i "/HypriotOS/a \
 . \n \

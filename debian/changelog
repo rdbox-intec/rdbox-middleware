@@ -1,3 +1,9 @@
+rdbox (0.2.0) stretch; urgency=medium
+
+  * RDBOX App Market support
+
+ -- INTEC Inc. <info-rdbox@intec.co.jp>  Mon, 31 Aug 2020 08:55:06 +0900
+
 rdbox (0.1.7) stretch; urgency=medium
 
   * NAT separates the networks of edge and cloud environments.

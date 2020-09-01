@@ -1,7 +1,7 @@
 apiVersion: v1
 appVersion: "1.0"
-description: deploy OpenEBS and StorageClass.
-name: onpremise-blockstore
+description: deploy kubeapps for rdbox.
+name: onpremise-market
 version: 0.2.0
 sources:
   - https://github.com/rdbox-intec/rdbox

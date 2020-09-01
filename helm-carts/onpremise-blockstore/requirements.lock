@@ -1,6 +1,6 @@
 dependencies:
 - name: openebs
   repository: https://kubernetes-charts.storage.googleapis.com
-  version: 1.10.0
-digest: sha256:71655d037fb0fd66e28c84c8fee9fa19000d9cb6b4e634aa48cb9cfa46f7535a
-generated: "2020-05-27T08:56:48.241581844+09:00"
+  version: 1.11.1
+digest: sha256:1214143b1c0dc6d8384ffd4aff27fa273ce1e0ef0b2bc671f496360e3660c802
+generated: "2020-08-26T14:44:14.087145048+09:00"

@@ -47,6 +47,17 @@ class ClassifierForInitCommand(object):
         if cls._distribution_secret() is False:
             return False
         cls._print_separator("#")
+        # End
+        crt_path = os.path.join(
+                cls.OPENSSL_KEY_CERT_DIRPATH, cls.OPENSSL_CRT_NAME)
+        with open(crt_path) as file:
+            text = file.read()
+            r_print.info("")
+            r_print.info("A server certificate for RDBOX external services.")
+            r_print.info("Add it to your operating system and browser trust list.")
+            r_print.info("")
+            r_print.info('$ echo ' + '"' + text + '" > ' + 'Rdbox-Common-Tls.crt')
+            r_print.info("")
         r_print.info("Finish!!")
         return True
 
@@ -126,8 +137,8 @@ class ClassifierForInitCommand(object):
                 c = content.get("country")
                 st = content.get("region")
                 locatin = content.get("city")
-            cmd = '{openssl} req -newkey rsa:4096 -nodes -sha256 -keyout {key_path} -x509 -days 365 -out {crt_path} -subj "/C={c}/ST={st}/L={loc}/CN={cn}"'.format(
-                openssl=cls.OPENSSL_PATH, key_path=key_path, crt_path=crt_path, c=c, st=st, loc=locatin, cn=cn)
+            cmd = '{openssl} req -newkey rsa:4096 -nodes -sha256 -keyout {key_path} -x509 -days 365 -out {crt_path} -subj "/C={c}/ST={st}/L={loc}/CN={cn}" -addext "subjectAltName=DNS:{san}"'.format(
+                openssl=cls.OPENSSL_PATH, key_path=key_path, crt_path=crt_path, c=c, st=st, loc=locatin, cn=cn, san=cn)
             r_print.info(cmd)
             subprocess.check_output(cmd, shell=True)
         except Exception as e:

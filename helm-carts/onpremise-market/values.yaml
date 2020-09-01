@@ -1,0 +1,66 @@
+kubeapps:
+  global:
+    storageClass: "openebs-jiva-rdbox"
+  useHelm3: true
+  ingress:
+    enabled: true
+    certManager: true
+    hostname: kubeapps.rdbox.lan
+    tls: false
+    annotations:
+      kubernetes.io/ingress.class: nginx
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    extraTls:
+      - secretName: rdbox-common-tls
+        hosts:
+          - "*.rdbox.lan"
+  frontend:
+    nodeSelector:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+  apprepository:
+    initialRepos:
+      - name: bot-gen
+        url: https://rdbox-intec.github.io/rdbox_app_market/bot-gen
+        nodeSelector:
+          beta.kubernetes.io/arch: amd64
+          beta.kubernetes.io/os: linux
+      - name: manually
+        url: https://rdbox-intec.github.io/rdbox_app_market/manually
+        nodeSelector:
+          beta.kubernetes.io/arch: amd64
+          beta.kubernetes.io/os: linux
+    nodeSelector:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+  hooks:
+    nodeSelector:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+  kubeops:
+    nodeSelector:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+  tillerProxy:
+    nodeSelector:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+  assetsvc:
+    nodeSelector:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+  dashboard:
+    nodeSelector:
+      beta.kubernetes.io/arch: amd64
+      beta.kubernetes.io/os: linux
+  postgresql:
+    global:
+      storageClass: "openebs-jiva-rdbox"
+    master: 
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+        beta.kubernetes.io/os: linux
+    slave:
+      nodeSelector:
+        beta.kubernetes.io/arch: amd64
+        beta.kubernetes.io/os: linux

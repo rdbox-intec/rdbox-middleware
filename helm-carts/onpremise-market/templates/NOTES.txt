@@ -1,0 +1,13 @@
+** Please be patient while the chart is being deployed **
+
+Tip:
+
+  Watch the deployment status using the command: kubectl get pods -w --namespace {{ .Release.Namespace }}
+
+To access Kubeapps from outside your K8s cluster, follow the steps below:
+
+1. Get the Kubeapps URL:
+
+   "Kubeapps URL: https://{{ .Values.kubeapps.ingress.hostname }}/"
+
+2. Open a browser and access Kubeapps using the obtained URL.

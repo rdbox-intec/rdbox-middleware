@@ -1,0 +1,76 @@
+name: RDBOX Middleware Build and Deploy
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup gpg.
+      run: |
+        echo "$GPG_PRIVATE_KEY" > ~/.gpg-secret.key.pem
+        echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --import ~/.gpg-secret.key.pem
+        echo "$GPG_PASSPHRASE" > ~/.gpg-passphrase
+        echo "use-agent
+        pinentry-mode loopback" > ~/.gnupg/gpg.conf
+        echo "pinentry-program /usr/bin/pinentry-gtk-2
+        allow-loopback-pinentry" > ~/.gnupg/gpg-agent.conf
+        echo RELOADAGENT | gpg-connect-agent
+      shell: bash
+    - name: Install dependency packages.
+      run: |
+        sudo apt update
+        sudo apt install -y \
+          git-buildpackage \
+          quilt \
+          pbuilder \
+          debootstrap \
+          devscripts \
+          dput \
+          wget \
+          qemu \
+          qemu-user-static \
+          cdbs \
+          debhelper
+      shell: bash
+    - name: Install Keying.
+      run: |
+        sudo apt install -y \
+          ubuntu-keyring \
+          debian-archive-keyring
+        sudo curl http://archive.raspbian.org/raspbian/pool/main/r/raspbian-archive-keyring/raspbian-archive-keyring_20120528.2_all.deb -o /root/raspbian-archive-keyring_20120528.2_all.deb
+        sudo dpkg -i /root/raspbian-archive-keyring_20120528.2_all.deb
+      shell: bash
+    - name: Bootstrap OS.
+      run: |
+        sudo cp -rf ./.pbuilderrc /root/.pbuilderrc
+        sudo mkdir -p /var/cache/pbuilder
+        sudo mkdir -p /var/cache/pbuilder/raspbian-buster-armhf/aptcache/
+        sudo mkdir -p /var/cache/pbuilder/debian-buster-amd64/aptcache/
+        sudo chmod -R 777 /var/cache/pbuilder
+        sudo OS=raspbian DIST=buster ARCH=armhf pbuilder --create
+        sudo OS=debian DIST=buster ARCH=amd64 pbuilder --create
+      shell: bash
+    - name: Build deb packages.
+      run: |
+        echo ::set-env name=RELEASE_VERSION::${GITHUB_REF#refs/*/}
+        ONLY_NO_VER=$(cut -d'v' -f 2 <<<${RELEASE_VERSION})
+        bash ./build_deb_cloud.sh ${ONLY_NO_VER} armhf
+        bash ./build_deb_cloud.sh ${ONLY_NO_VER} amd64
+      shell: bash
+    - name: Publish deb packages.
+      run: |
+        ONLY_NO_VER=$(cut -d'v' -f 2 <<<${RELEASE_VERSION})
+        bash ./publish_deb.sh ${ONLY_NO_VER} armhf
+        bash ./publish_deb.sh ${ONLY_NO_VER} amd64
+      shell: bash
+    env:
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+      GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      BINTRAY_API_SECRET: ${{ secrets.BINTRAY_API_SECRET }}
+      BINTRAY_API_GPGKEY: ${{ secrets.GPG_PASSPHRASE }}
+      DEBFULLNAME: ${{ secrets.DEBFULLNAME }}
+      DEBEMAIL: ${{ secrets.DEBEMAIL }}
+      GPGKEY: ${{ secrets.GPGKEY }}
