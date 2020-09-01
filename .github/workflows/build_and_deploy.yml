@@ -8,8 +8,13 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
+    - name: Pick Version.
+      run: |
+        echo ::set-env name=RELEASE_VERSION::${GITHUB_REF#refs/*/}
+      shell: bash
     - name: Setup gpg.
       run: |
+        echo $RELEASE_VERSION
         echo "$GPG_PRIVATE_KEY" > ~/.gpg-secret.key.pem
         echo "$GPG_PASSPHRASE" | gpg --batch --yes --passphrase-fd 0 --import ~/.gpg-secret.key.pem
         echo "$GPG_PASSPHRASE" > ~/.gpg-passphrase
@@ -55,7 +60,6 @@ jobs:
       shell: bash
     - name: Build deb packages.
       run: |
-        echo ::set-env name=RELEASE_VERSION::${GITHUB_REF#refs/*/}
         bash ./build_deb_cloud.sh $(cut -d'v' -f 2 <<<${RELEASE_VERSION}) armhf
         bash ./build_deb_cloud.sh $(cut -d'v' -f 2 <<<${RELEASE_VERSION}) amd64
       shell: bash
