@@ -1,6 +1,13 @@
 rdbox (0.2.1) buster; urgency=medium
 
   * Enhance security
+     * Launch kubernetes-Dashboard as a Helm app.
+     * And it is accessible only from the intranet side.
+     * The separate self-signed certificates were consolidated into rdbox-common-tls.
+  * Resolved the problem of failing to obtain Master metrics.
+  * Support with RWM of BlockStore.
+  * Changed URI of RDBOX App Market.(From kubeapps.rdbox.lan to app-market.rdbox.lan)
+  * Change nodeSelector label (from beta.kubernetes.io/arch to kubernetes.io/arch)
 
  -- INTEC Inc. <info-rdbox@intec.co.jp>  Mon, 07 Sep 2020 15:18:06 +0900
 
