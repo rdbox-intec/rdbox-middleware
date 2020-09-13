@@ -1,24 +1,51 @@
-openebs:
-  apiserver:
-    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
-
-  provisioner:
-    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
-
-  localprovisioner:
-    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
-
-  snapshotOperator:
-    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
-
-  ndm:
-    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
-
-  ndmOperator:
-    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
-
-  webhook:
-    nodeSelector: {"node.rdbox.com/location": "hq", "beta.kubernetes.io/arch": "amd64"}
-  
 storageClass:
   ReplicaCount: 1
+
+openebs:
+  apiserver:
+    nodeSelector:
+      kubernetes.io/arch: "amd64"
+      kubernetes.io/os: "linux"
+      node.rdbox.com/location: "hq"
+  provisioner:
+    nodeSelector:
+      kubernetes.io/arch: "amd64"
+      kubernetes.io/os: "linux"
+      node.rdbox.com/location: "hq"
+  localprovisioner:
+    nodeSelector:
+      kubernetes.io/arch: "amd64"
+      kubernetes.io/os: "linux"
+      node.rdbox.com/location: "hq"
+  snapshotOperator:
+    nodeSelector:
+      kubernetes.io/arch: "amd64"
+      kubernetes.io/os: "linux"
+      node.rdbox.com/location: "hq"
+  ndm:
+    nodeSelector:
+      kubernetes.io/arch: "amd64"
+      kubernetes.io/os: "linux"
+      node.rdbox.com/location: "hq"
+  ndmOperator:
+    nodeSelector:
+      kubernetes.io/arch: "amd64"
+      kubernetes.io/os: "linux"
+      node.rdbox.com/location: "hq"
+  webhook:
+    nodeSelector:
+      kubernetes.io/arch: "amd64"
+      kubernetes.io/os: "linux"
+      node.rdbox.com/location: "hq"
+
+nfs-server-provisioner:
+  persistence:
+    enabled: true
+    storageClass: "openebs-jiva-rdbox-src"
+    size: 20Gi
+  storageClass:
+    name: "openebs-jiva-rdbox"
+  nodeSelector:
+    kubernetes.io/arch: "amd64"
+    kubernetes.io/os: "linux"
+    node.rdbox.com/location: "hq"

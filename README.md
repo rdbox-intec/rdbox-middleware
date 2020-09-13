@@ -69,7 +69,7 @@ In this document, we run the initial process for using rdbox_cli and some of the
 
     ```bash
     $ kubectl apply -f https://raw.githubusercontent.com/Azure/helm-charts/master/docs/prerequisities/helm-rbac-config.yaml
-    $ helm init --service-account tiller --node-selectors "beta.kubernetes.io/arch"="amd64"
+    $ helm init --service-account tiller --node-selectors "kubernetes.io/arch"="amd64"
     ```
 
 4.  Activate the function so that you can use Kubernetes' Ingress with RDBOX.

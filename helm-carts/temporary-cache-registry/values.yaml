@@ -2,7 +2,7 @@ docker-registry:
   replicaCount: 1
   # Deployment
   nodeSelector:
-    beta.kubernetes.io/arch: "amd64"
+    kubernetes.io/arch: "amd64"
   image:
     repository: registry
   securityContext:
