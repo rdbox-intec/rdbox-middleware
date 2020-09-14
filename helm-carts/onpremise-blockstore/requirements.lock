@@ -1,6 +1,9 @@
 dependencies:
 - name: openebs
+  repository: https://openebs.github.io/charts
+  version: 2.0.0
+- name: nfs-server-provisioner
   repository: https://kubernetes-charts.storage.googleapis.com
-  version: 1.11.1
-digest: sha256:1214143b1c0dc6d8384ffd4aff27fa273ce1e0ef0b2bc671f496360e3660c802
-generated: "2020-08-26T14:44:14.087145048+09:00"
+  version: 1.1.1
+digest: sha256:6abb455a1dc6b8da94cf75b34ece7049af4cdda74581fb98402fae7c2762a286
+generated: "2020-09-10T11:07:31.044475064+09:00"

@@ -23,6 +23,17 @@ fi
 IP_K8S_MASTER=$(echo "$1"| cut -d ":" -f 1)
 count=0
 success=0
+
+# Step1 Specify the network interface for master.
+if [[ $rdbox_type = "master" ]]; then
+  ip_br0=$(ip -f inet -o addr show br0|cut -d\  -f 7 | cut -d/ -f 1 | tr -d '\n')
+  echo "KUBELET_EXTRA_ARGS=--node-ip=${ip_br0}" > /etc/default/kubelet
+  sudo systemctl daemon-reload
+  sudo systemctl restart kubelet.service
+  sleep 10
+fi
+
+# Step2 Issue join command
 while :
 do
   count=$((count + 1))

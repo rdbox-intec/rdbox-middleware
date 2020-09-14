@@ -1,0 +1,4 @@
+* From outside the cluster, the server URL are:
+     https://k8s-dashboard.rdbox.lan
+* You can get a log-in token with the following command
+     $ kubectl -n {{ .Release.Namespace }} get secret -o json | jq .items[] | jq 'select(.metadata.name | startswith("admin-user-token"))' | jq -r .data.token | base64 -d
